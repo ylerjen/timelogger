@@ -1,0 +1,40 @@
+:root {
+    --font-size-big: 1.2rem;
+    --font-size-small: .8rem;
+    --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.muted {
+    color: var(--gray-300);
+    font-size: var(--font-size-small);
+}
+
+.me-1 {
+    margin-right: .25em;
+}
+
+.me-2 {
+    margin-right: .5em;
+}
+
+.ms-1 {
+    margin-left: .25em;
+}
+
+.ms-2 {
+    margin-left: .5em;
+}
