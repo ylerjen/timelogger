@@ -21,3 +21,9 @@
 .today-actions {
     margin-top: 2em;
 }
+
+.timeline-content {
+    display: flex;
+    width: 200px;
+    justify-content: space-between;
+}

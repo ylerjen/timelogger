@@ -23,7 +23,7 @@ export function TaskActions(p: Props) {
     } else {
         return (<div>
             <Button label="End work" icon="pi pi-power-off" onClick={p.onEndWorkClick} />
-            <Button label="Pause work" icon="pi pi-pause" className="ms-2" onClick={p.onPauseWorkClick} />
+            <Button label="Pause work" icon="pi pi-pause" onClick={p.onPauseWorkClick} />
         </div>);
     }
 }
