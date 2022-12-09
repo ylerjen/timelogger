@@ -7,12 +7,15 @@ import { intervalToDuration } from 'date-fns';
  * @param absoluteValue 
  * @returns the interval as readable string
  */
-export function timeDifference(start: Date, end = new Date()): string {
+export function timeDifference(start: Date, end = new Date()): Duration {
     const diff = intervalToDuration({end, start});
+    const hours = diff.hours ?? 0;
+    const minutes = (diff.minutes ?? 0);
+    return {hours, minutes};
+}
 
-    const h = diff.hours ?? 0;
-    let m = (diff.minutes ?? 0).toString();
-    m = m.padStart(2, '0');
-
+export function formatTimeDiff(duration: Duration): string {
+    const h = duration.hours ?? 0;
+    const m = (duration.minutes ?? 0).toString().padStart(2, '0');
     return `${h}h ${m}m`;
 }

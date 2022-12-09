@@ -10,7 +10,7 @@ interface Props {
     onContinueWorkClick: () => void;
 }
 
-export function TaskActions(p: Props) {
+export function TaskActions(p: Props): JSX.Element {
     const onStartWorkClick = () => '';
     if (!p.isWorking && !p.isPausing) {
         return (<div>

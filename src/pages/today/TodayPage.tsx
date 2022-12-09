@@ -4,21 +4,21 @@ import { Menu } from 'primereact/menu';
 import { Button } from 'primereact/button';
 import { Timeline } from 'primereact/timeline';
 import { TaskActions } from '../../components/task-actions/TaskActions';
-import { timeDifference } from '../../helpers/TimeHelper';
+import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
 import './TodayPage.css';
+import { TimeLog } from '../../models/TimeLog';
+import { countPausedDuration, countWorkedDuration, endTask, getTimeLogs, startTask } from '../../services/time-service';
  
-
 export function TodayPage() {
-
     // const s = useState({ isWorking: false, isPausing: false });
     const s = {
         isWorking: true,
         isPausing: false,
         onStartWorkClick: () => {
-            alert('start work');
+            startTask(1);
         },
         onEndWorkClick: () => {
-            alert('start work');
+            endTask();
         },
         onPauseWorkClick: () => {
             alert('start work');
@@ -34,12 +34,7 @@ export function TodayPage() {
         {label: 'Delete', icon: 'pi pi-trash'}
     ];
 
-    const events = [
-        { project: 'VA', task: 'PRJ128', start: new Date(2022, 10, 7, 8, 30), end: new Date(2022, 10, 7, 11, 0), color: '#9C27B0' },
-        { project: 'VA', task: 'Meeting', start: new Date(2022, 10, 7, 11, 0), end: new Date(2022, 10, 7, 12, 0), color: '#673AB7' },
-        { project: 'VA', task: 'Pause', start: new Date(2022, 10, 7, 12, 0), end: new Date(2022, 10, 7, 13, 0), color: '#FF9800' },
-        { project: 'VA', task: 'PRJ128', start: new Date(2022, 10, 7, 13, 0), color: '#607D8B' }
-    ];
+    const timeLogs: Array<TimeLog> = getTimeLogs();
 
     let menu= useRef(null);
 
@@ -47,11 +42,11 @@ export function TodayPage() {
         <h1>Today</h1>
         <div className="resume-zone">
             <div className='resume-col'>
-                <div className="time-resume">0h 00m</div>
+                <div className="time-resume">{formatTimeDiff(countWorkedDuration(timeLogs))}</div>
                 <div className="label-resume">Worked</div>
             </div>
             <div className='resume-col'>
-                <div className="time-resume">0h 00m</div>
+                <div className="time-resume">{formatTimeDiff(countPausedDuration(timeLogs))}</div>
                 <div className="label-resume">Paused</div>
             </div>
         </div>
@@ -59,14 +54,14 @@ export function TodayPage() {
             <TaskActions {...s}></TaskActions>
         </div>
         <div className="today-timeline">
-            <Timeline value={events}
-                marker={(item) => <i className="pi pi-circle-fill" style={{ color: item.color }}></i>}
-                opposite={(item) => <div><div className='muted'>{item.project}</div><div>{item.task}</div></div>}
-                content={(item) => 
+            <Timeline value={timeLogs}
+                marker={(item: TimeLog) => <i className="pi pi-circle-fill" style={{ color: item.task.color }}></i>}
+                opposite={(item: TimeLog) => <div><div className='muted'>{item.task.project?.name || 'XXX'}</div><div>{item.task.name}</div></div>}
+                content={(item: TimeLog) => 
                 <div className="timeline-content">
                     <div>
                         <div className="muted"><span>{format(item.start, 'HH:mm')}</span> - <span>{item.end ? format(item.end, 'HH:mm') : 'OPEN'}</span></div>
-                        <div>{timeDifference(item.start, item.end)}</div>
+                        <div>{formatTimeDiff(timeDifference(item.start, item.end))}</div>
                     </div>
                     <div className="today-task-actions">                        
                         <Menu model={menuItems} popup ref={menu} />
