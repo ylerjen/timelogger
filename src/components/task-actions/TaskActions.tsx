@@ -1,9 +1,9 @@
 import { Button } from "primereact/button";
+import { WorkingStateType } from '../../models/WorkingState';
 import './TaskActions.css';
 
 interface Props {
-    isWorking: boolean;
-    isPausing: boolean;
+    workingState: WorkingStateType;
     onStartWorkClick: () => void;
     onEndWorkClick: () => void;
     onPauseWorkClick: () => void;
@@ -12,11 +12,11 @@ interface Props {
 
 export function TaskActions(p: Props): JSX.Element {
     const onStartWorkClick = () => '';
-    if (!p.isWorking && !p.isPausing) {
+    if (WorkingStateType.off === p.workingState) {
         return (<div>
             <Button label="Start work" icon="pi pi-play" onClick={onStartWorkClick} />
         </div>);
-    } else if (p.isPausing) {
+    } else if (p.workingState === WorkingStateType.pausing) {
         return (<div>
             <Button label="Continue" icon="pi pi-play" onClick={p.onContinueWorkClick} />
         </div>);

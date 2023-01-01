@@ -4,22 +4,18 @@ import { TimeLog } from "../models/TimeLog";
 import { getTaskById, pause } from "./project-service";
 
 const timeLogs: Array<TimeLog> = [
-    { task: getTaskById(1), start: new Date(2022, 10, 7, 8, 30), end: new Date(2022, 10, 7, 11, 0) },
-    { task: getTaskById(2), start: new Date(2022, 10, 7, 11, 0), end: new Date(2022, 10, 7, 12, 0) },
-    { task: getTaskById(0), start: new Date(2022, 10, 7, 12, 0), end: new Date(2022, 10, 7, 13, 0) },
-    { task: getTaskById(1), start: new Date(2022, 10, 7, 13, 0) }
+    { id: 111, task: getTaskById(1), start: new Date(2022, 10, 7, 8, 30), end: new Date(2022, 10, 7, 11, 0) },
+    { id: 222, task: getTaskById(2), start: new Date(2022, 10, 7, 11, 0), end: new Date(2022, 10, 7, 12, 0) },
+    { id: 333, task: getTaskById(0), start: new Date(2022, 10, 7, 12, 0), end: new Date(2022, 10, 7, 13, 0) },
+    { id: 444, task: getTaskById(1), start: new Date(2022, 10, 7, 13, 0) }
 ];
 
 export function startTask(taskId: number): void {
     timeLogs.push({
+        id: Date.now(),
         task: getTaskById(taskId),
         start: new Date(),
     })
-}
-
-export function startPause(): void {
-    endTask();
-    startTask(0)
 }
 
 export function endTask(): void {
@@ -29,7 +25,33 @@ export function endTask(): void {
     }
 }
 
-export function getTimeLogs(): Array<TimeLog> {
+export function startPause(): void {
+    endTask();
+    startTask(0)
+}
+
+export function endPause(): void {
+    const pauseLog = timeLogs.find(l => !l.end && l.task.id === pause.id);
+    if (!pauseLog) {
+        return;
+    }
+    const lastLog = timeLogs.find(l => l.end?.getHours() === pauseLog.start.getHours() && l.end.getMinutes() === pauseLog.start.getMinutes())
+    endPause();
+    if (!lastLog) {
+        return;
+    }
+    startTask(lastLog.task.id);
+}
+
+export function changeTaskForEntry(logId: number, newTaskId: number): void {
+    const entry = timeLogs.find(l => l.id === logId);
+    if (!entry) {
+        return;
+    }
+    entry.task = getTaskById(newTaskId);
+}
+
+export function getTimeLogs(date = new Date()): Array<TimeLog> {
     return timeLogs;
 }
 

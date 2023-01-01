@@ -1,3 +1,7 @@
+.today-date {
+    font-size: .8rem;
+}
+
 .resume-zone {
     display: flex;
     justify-content: space-evenly;
