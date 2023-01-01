@@ -5,13 +5,13 @@ import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Timeline } from 'primereact/timeline';
 import { MenuItem } from 'primereact/menuitem';
-import { TaskActions } from '../../components/task-actions/TaskActions';
-import { TaskSelector } from '../../components/task-selector/TaskSelector';
-import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
 import { TimeLog } from '../../models/TimeLog';
 import { WorkingStateType } from '../../models/WorkingState';
+import { TaskActions } from '../../components/task-actions/TaskActions';
+import { TaskSelector } from '../../components/task-selector/TaskSelector';
+import { HoursSummary } from '../../components/hours-summary/HoursSummary';
+import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
 import { changeTaskForEntry, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
-import { HoursSummary } from '../../components/hours-summary/hours-summary';
 import './TodayPage.css';
 
 interface State {
@@ -137,7 +137,8 @@ export class TodayPage extends React.Component<Prop, State> {
                                 <Menu model={this.menuItemsFactory(item.id)} popup ref={this.menu} />
                                 <Button label="Show" icon="pi pi-bars" className='p-button p-component p-button-rounded p-button-outlined p-button-icon-only' onClick={(event) => (this.menu.current as any).toggle(event)} />
                             </div>
-                        </div>}
+                        </div>
+                    }
                 />
             </div>
             <Button icon="pi pi-plus" label="Add Working Hours" className="p-button-secondary p-button-text" />

@@ -1,5 +1,6 @@
 import { formatTimeDiff } from "../../helpers/TimeHelper";
 import { countPausedDuration, countWorkedDuration } from "../../services/time-service";
+import './HoursSummary.css';
 
 export function HoursSummary(prop: any): JSX.Element {
     return (

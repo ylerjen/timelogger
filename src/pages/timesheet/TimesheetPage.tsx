@@ -2,7 +2,7 @@ import { addMonths } from 'date-fns';
 import { Component } from 'react';
 import { Button } from 'primereact/button';
 import { PrimeIcons } from 'primereact/api';
-import { HoursSummary } from '../../components/hours-summary/hours-summary';
+import { HoursSummary } from '../../components/hours-summary/HoursSummary';
 import { getTimeLogs } from '../../services/time-service';
 import './TimesheetPage.css';
  

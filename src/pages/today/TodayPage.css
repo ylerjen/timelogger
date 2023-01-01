@@ -2,25 +2,6 @@
     font-size: .8rem;
 }
 
-.resume-zone {
-    display: flex;
-    justify-content: space-evenly;
-}
-
-.resume-col {
-    display: flex;
-    flex-direction: column;
-}
-
-.time-resume {
-    font-weight: bold;
-    font-size: var(--font-size-big);
-}
-
-.label-resume {
-    font-size: var(--font-size-small);
-}
-
 .today-timeline,
 .today-actions {
     margin-top: 2em;
