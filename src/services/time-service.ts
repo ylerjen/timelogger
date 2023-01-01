@@ -63,9 +63,7 @@ export function countTasksDuration(logs: Array<TimeLog>): Duration {
         let minutes = duration.minutes ?? 0;
         const hours = duration.hours ?? 0;
         return minutes + hoursToMinutes(hours);
-    }).reduce((previousVal = 0, currentVal, idx, array) => {
-        return previousVal + currentVal;
-    });
+    }).reduce((previousVal = 0, currentVal) => previousVal + currentVal);
     const start = new Date();
     const end = addMinutes(start, totalMinutes);
     return intervalToDuration({ end, start });
