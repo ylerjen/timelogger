@@ -2,6 +2,8 @@ import { addMonths } from 'date-fns';
 import { Component } from 'react';
 import { Button } from 'primereact/button';
 import { PrimeIcons } from 'primereact/api';
+import { HoursSummary } from '../../components/hours-summary/hours-summary';
+import { getTimeLogs } from '../../services/time-service';
 import './TimesheetPage.css';
  
 interface Props {}
@@ -30,6 +32,7 @@ export class TimesheetPage extends Component<Props, State> {
                 <span className='date-title-text'>{this.timesheetDate.toLocaleDateString('fr-CH')}</span>
                 <Button icon="{this.primeIcons.CARET_RIGHT}" iconPos="right" onClick={() => this.gotoMonth(+1)} />
             </h1>
+            <HoursSummary timeLogs={getTimeLogs()}></HoursSummary>
         </section>);
     }
 }

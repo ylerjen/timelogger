@@ -10,9 +10,9 @@ import { TaskSelector } from '../../components/task-selector/TaskSelector';
 import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
 import { TimeLog } from '../../models/TimeLog';
 import { WorkingStateType } from '../../models/WorkingState';
-import { changeTaskForEntry, countPausedDuration, countWorkedDuration, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
+import { changeTaskForEntry, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
+import { HoursSummary } from '../../components/hours-summary/hours-summary';
 import './TodayPage.css';
-
 
 interface State {
     isVisible: boolean;
@@ -21,7 +21,6 @@ interface State {
 }
 
 interface Prop {
-
 }
 
 export class TodayPage extends React.Component<Prop, State> {
@@ -114,16 +113,7 @@ export class TodayPage extends React.Component<Prop, State> {
         return (<section>
             <h1>Today</h1>
             <h2 className='today-date'>{format(this.now, 'dd-MM-Y')}</h2>
-            <div className="resume-zone">
-                <div className='resume-col'>
-                    <div className="time-resume">{formatTimeDiff(countWorkedDuration(this.state.timeLogs))}</div>
-                    <div className="label-resume">Worked</div>
-                </div>
-                <div className='resume-col'>
-                    <div className="time-resume">{formatTimeDiff(countPausedDuration(this.state.timeLogs))}</div>
-                    <div className="label-resume">Paused</div>
-                </div>
-            </div>
+            <HoursSummary timeLogs={this.state.timeLogs}></HoursSummary>
             <div className="today-actions">
                 <TaskActions
                     onContinueWorkClick={this.onContinueWorkClick.bind(this)}
