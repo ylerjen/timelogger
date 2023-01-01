@@ -113,7 +113,7 @@ export class TodayPage extends React.Component<Prop, State> {
     render(): JSX.Element {
         return (<section>
             <h1>Today</h1>
-            <h2 className='today-date'>{format(this.now, 'd-M-Y')}</h2>
+            <h2 className='today-date'>{format(this.now, 'dd-MM-Y')}</h2>
             <div className="resume-zone">
                 <div className='resume-col'>
                     <div className="time-resume">{formatTimeDiff(countWorkedDuration(this.state.timeLogs))}</div>
