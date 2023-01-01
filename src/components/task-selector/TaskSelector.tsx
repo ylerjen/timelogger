@@ -10,7 +10,7 @@ export function TaskSelector(p: Prop): JSX.Element {
     const projects = getAllProjects();
     let tasks: SelectItemOptionsType = [];
     projects.forEach(p => {
-        const projectTasks = getTasksInProject(p.id);
+        const projectTasks = getTasksInProject(p.id!);
 
         const pEntry = {
             name: p.name,

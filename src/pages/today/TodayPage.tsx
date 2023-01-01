@@ -6,17 +6,16 @@ import { Dialog } from 'primereact/dialog';
 import { Timeline } from 'primereact/timeline';
 import { MenuItem } from 'primereact/menuitem';
 import { TimeLog } from '../../models/TimeLog';
-import { WorkingStateType } from '../../models/WorkingState';
 import { TaskActions } from '../../components/task-actions/TaskActions';
 import { TaskSelector } from '../../components/task-selector/TaskSelector';
 import { HoursSummary } from '../../components/hours-summary/HoursSummary';
 import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
-import { changeTaskForEntry, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
+import { changeTaskForEntry, deleteLogItem, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
+import { PAUSE } from '../../services/db-service';
 import './TodayPage.css';
 
 interface State {
     isVisible: boolean;
-    workingState: WorkingStateType;
     timeLogs: Array<TimeLog>;
 }
 
@@ -32,84 +31,137 @@ export class TodayPage extends React.Component<Prop, State> {
 
     menu: any;
 
-    processedEntry = 0;
+    processedEntry: number | null = null;
+
+    /**
+     * This property will hold the callback to be called when select task modal is closed
+     */
+    dialogCallback = (_taskId: number) => { };
 
     constructor(props: Prop) {
         super(props);
         this.menu = React.createRef();
         this.state = {
             isVisible: false,
-            workingState: WorkingStateType.off,
-            timeLogs: getTimeLogs(),
+            timeLogs: [{start: new Date(), taskId: 1, id: 1}],
         };
     }
 
-    menuItemsFactory(entryId: number): Array<MenuItem> {
+    componentDidMount(): void {
+        this.fetchLogs();
+    }
+
+    menuItemsFactory(logEntryId: number): Array<MenuItem> {
         return [
             {
-                label: 'Change Task' + entryId,
+                label: 'Change Task' + logEntryId,
                 icon: 'pi pi-pencil',
                 command: () => {
-                    this.processedEntry = entryId;
+                    this.processedEntry = logEntryId;
+                    this.dialogCallback = this.changeTask;
                     this.setState({
-                        ...this.state,
                         isVisible: true,
                     });
                 },
             },
             { label: 'Edit Working Time', icon: 'pi pi-clock' },
             { label: 'Split Up', icon: 'pi pi-clone' },
-            { label: 'Delete', icon: 'pi pi-trash' }
+            {
+                label: 'Delete',
+                icon: 'pi pi-trash',
+                command: () => {
+                    this.deleteTimeLog(logEntryId);
+                    this.setState(s => ({
+                        timeLogs: s.timeLogs.filter(l => l.id !== logEntryId),
+                    }));
+                },
+            }
         ];
     }
 
+    fetchLogs(): void {
+        getTimeLogs()
+            .then(timeLogs => {
+                this.setState({
+                    timeLogs,
+                });
+                console.log(timeLogs);
+            });
+
+    }
+
+    getCurrentWorkingLog(): TimeLog | undefined {
+        return this.state.timeLogs.find(l => !l.end);
+    }
+
+    deleteTimeLog(logId: number): void {
+        deleteLogItem(logId);
+        this.fetchLogs();
+    }
+
     onStartWorkClick(): void {
-        startTask(1);
+        this.dialogCallback = this.startTask;
         this.setState({
-            ...this.state,
-            workingState: WorkingStateType.working,
+            isVisible: true,
         });
     }
 
     onEndWorkClick(): void {
-        endTask();
-        this.setState({
-            ...this.state,
-            workingState: WorkingStateType.off,
+        const log = this.getCurrentWorkingLog();
+        if (!log) {
+            return;
+        }
+        endTask(log).then(savedLog => {
+            if (savedLog) {
+                this.fetchLogs();
+            }
         });
     }
 
     onPauseWorkClick(): void {
-        startPause();
-        this.setState({
-            ...this.state,
-            workingState: WorkingStateType.pausing,
+        startPause().then(savedLog => {
+            if (savedLog) {
+                this.fetchLogs();
+            }
         });
     }
 
     onContinueWorkClick(): void {
-        endPause();
-        this.setState({
-            ...this.state,
-            workingState: WorkingStateType.working,
-        });
+        endPause().then(() => this.fetchLogs());
     }
 
     changeTask(taskId: number): void {
+        if (this.processedEntry === null) {
+            return;
+        }
         changeTaskForEntry(this.processedEntry, taskId);
-
-        console.log('new logs', getTimeLogs())
-
         this.setState({
-            ...this.state,
             isVisible: false,
-            timeLogs: getTimeLogs(),
-
         });
-        this.processedEntry = 0;
+        this.fetchLogs();
+        this.processedEntry = null;
+    }
+
+    startTask(taskId: number): void {
+        startTask(taskId).then(savedLog => {
+            if (!savedLog) {
+                return;
+            }
+            this.setState({
+                isVisible: false,
+            });
+            this.fetchLogs();
+        });
+    }
+
+    hideDialog(): void {
+        this.setState({
+            isVisible: false,
+        });
     }
 
     render(): JSX.Element {
+        const projectInfo = (log: TimeLog) => log.taskId === PAUSE.id ? '' : <span className='muted'>{/*log.task.project?.name ||*/ 'XXX'}</span>;
         return (<section>
             <h1>Today</h1>
             <h2 className='today-date'>{format(this.now, 'dd-MM-Y')}</h2>
@@ -120,21 +172,21 @@ export class TodayPage extends React.Component<Prop, State> {
                     onEndWorkClick={this.onEndWorkClick.bind(this)}
                     onPauseWorkClick={this.onPauseWorkClick.bind(this)}
                     onStartWorkClick={this.onStartWorkClick.bind(this)}
-                    workingState={this.state.workingState}
+                    timelogs={this.state.timeLogs}
                 ></TaskActions>
             </div>
             <div className="today-timeline">
                 <Timeline value={this.state.timeLogs}
-                    marker={(item: TimeLog) => <i className="pi pi-circle-fill" style={{ color: item.task.color }}></i>}
-                    opposite={(item: TimeLog) => <div><div className='muted'>{item.task.project?.name || 'XXX'}</div><div>{item.task.name}</div></div>}
-                    content={(item: TimeLog) =>
+                    marker={(item: TimeLog) => <i className="pi pi-circle-fill" style={{ color: 'blue' /*item.task.color*/ }}></i>}
+                    opposite={(item: TimeLog) => <div className="task-info">{projectInfo(item)}<span>Task Name{/*item.task.name*/}</span></div>}
+                    content={(log: TimeLog) =>
                         <div className="timeline-content">
-                            <div>
-                                <div className="muted"><span>{format(item.start, 'HH:mm')}</span> - <span>{item.end ? format(item.end, 'HH:mm') : 'OPEN'}</span></div>
-                                <div>{formatTimeDiff(timeDifference(item.start, item.end))}</div>
+                            <div className="task-info">
+                                <div className="muted"><span>{format(log.start, 'HH:mm')}</span> - <span>{log.end ? format(log.end, 'HH:mm') : 'OPEN'}</span></div>
+                                <div>{formatTimeDiff(timeDifference(log.start, log.end))}</div>
                             </div>
                             <div className="today-task-actions">
-                                <Menu model={this.menuItemsFactory(item.id)} popup ref={this.menu} />
+                                <Menu model={this.menuItemsFactory(log.id!)} popup ref={this.menu} />
                                 <Button label="Show" icon="pi pi-bars" className='p-button p-component p-button-rounded p-button-outlined p-button-icon-only' onClick={(event) => (this.menu.current as any).toggle(event)} />
                             </div>
                         </div>
@@ -142,11 +194,8 @@ export class TodayPage extends React.Component<Prop, State> {
                 />
             </div>
             <Button icon="pi pi-plus" label="Add Working Hours" className="p-button-secondary p-button-text" />
-            <Dialog header="Header" visible={this.state.isVisible} style={{ width: '50vw' }} /*('displayBasic')}*/ onHide={() => this.setState({
-                ...this.state,
-                isVisible: false,
-            })}>
-                <TaskSelector selectedCallback={this.changeTask.bind(this)}></TaskSelector>
+            <Dialog header="Header" visible={this.state.isVisible} style={{ width: '50vw' }} /*('displayBasic')}*/ onHide={this.hideDialog.bind(this)}>
+                <TaskSelector selectedCallback={this.dialogCallback.bind(this)}></TaskSelector>
             </Dialog>
         </section>);
     }

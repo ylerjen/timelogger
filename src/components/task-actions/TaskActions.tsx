@@ -1,9 +1,10 @@
 import { Button } from "primereact/button";
-import { WorkingStateType } from '../../models/WorkingState';
+import { TimeLog } from "../../models/TimeLog";
+import { PAUSE } from "../../services/db-service";
 import './TaskActions.css';
 
 interface Props {
-    workingState: WorkingStateType;
+    timelogs: Array<TimeLog>;
     onStartWorkClick: () => void;
     onEndWorkClick: () => void;
     onPauseWorkClick: () => void;
@@ -11,19 +12,20 @@ interface Props {
 }
 
 export function TaskActions(p: Props): JSX.Element {
-    const onStartWorkClick = () => '';
-    if (WorkingStateType.off === p.workingState) {
+    const isPausing = p.timelogs.some(t => t.taskId === PAUSE.id && !t.end);
+    const isWorking = p.timelogs.some(t => t.taskId !== PAUSE.id && !t.end);
+    if (isWorking) {
         return (<div>
-            <Button label="Start work" icon="pi pi-play" onClick={onStartWorkClick} />
+            <Button label="End work" icon="pi pi-power-off" onClick={p.onEndWorkClick} />
+            <Button label="Pause work" icon="pi pi-pause" onClick={p.onPauseWorkClick} />
         </div>);
-    } else if (p.workingState === WorkingStateType.pausing) {
+    } else if (isPausing) {
         return (<div>
             <Button label="Continue" icon="pi pi-play" onClick={p.onContinueWorkClick} />
         </div>);
     } else {
         return (<div>
-            <Button label="End work" icon="pi pi-power-off" onClick={p.onEndWorkClick} />
-            <Button label="Pause work" icon="pi pi-pause" onClick={p.onPauseWorkClick} />
+            <Button label="Start work" icon="pi pi-play" onClick={p.onStartWorkClick} />
         </div>);
     }
 }

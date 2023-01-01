@@ -1,58 +1,62 @@
 import { addMinutes, hoursToMinutes, intervalToDuration } from "date-fns";
 import { timeDifference } from "../helpers/TimeHelper";
 import { TimeLog } from "../models/TimeLog";
-import { getTaskById, pause } from "./project-service";
+import { getTaskById } from "./project-service";
+import { deleteDbTimeLog, getDbTimelogs, PAUSE, upsertDbTimeLog } from "./db-service";
 
-const timeLogs: Array<TimeLog> = [
-    { id: 111, task: getTaskById(1), start: new Date(2022, 10, 7, 8, 30), end: new Date(2022, 10, 7, 11, 0) },
-    { id: 222, task: getTaskById(2), start: new Date(2022, 10, 7, 11, 0), end: new Date(2022, 10, 7, 12, 0) },
-    { id: 333, task: getTaskById(0), start: new Date(2022, 10, 7, 12, 0), end: new Date(2022, 10, 7, 13, 0) },
-    { id: 444, task: getTaskById(1), start: new Date(2022, 10, 7, 13, 0) }
-];
-
-export function startTask(taskId: number): void {
-    timeLogs.push({
-        id: Date.now(),
-        task: getTaskById(taskId),
-        start: new Date(),
-    })
+export async function deleteLogItem(logId: number): Promise<void> {
+    return await deleteDbTimeLog(logId);
 }
 
-export function endTask(): void {
-    const timeLog = timeLogs.find(l => !l.end);
-    if (timeLog) {
-        timeLog.end = new Date();
+export function startTask(taskId: number): Promise<void | TimeLog> {
+    if (!taskId) {
+        return Promise.resolve();
     }
+    const dbTimeLog: TimeLog = {
+        start: new Date(),
+        taskId,
+    }
+    return upsertDbTimeLog(dbTimeLog);
 }
 
-export function startPause(): void {
-    endTask();
-    startTask(0)
+export function endTask(log: TimeLog): Promise<void | TimeLog> {
+    if (!log) {
+        Promise.resolve();
+    }
+    log.end = new Date();
+    return upsertDbTimeLog(log);
 }
 
-export function endPause(): void {
-    const pauseLog = timeLogs.find(l => !l.end && l.task.id === pause.id);
+export function startPause(): Promise<void | TimeLog> {
+    return startTask(PAUSE.id!)
+}
+
+export async function endPause(): Promise<void> {
+    const logs = await getTimeLogs();
+    const pauseLog = logs.find(l => !l.end && l.taskId === PAUSE.id);
     if (!pauseLog) {
         return;
     }
-    const lastLog = timeLogs.find(l => l.end?.getHours() === pauseLog.start.getHours() && l.end.getMinutes() === pauseLog.start.getMinutes())
-    endPause();
+    await endTask(pauseLog);
+    const lastLog = logs.find(l => l.end?.getHours() === pauseLog.start.getHours() && l.end.getMinutes() === pauseLog.start.getMinutes())
     if (!lastLog) {
         return;
     }
-    startTask(lastLog.task.id);
+    await startTask(lastLog.taskId);
 }
 
-export function changeTaskForEntry(logId: number, newTaskId: number): void {
-    const entry = timeLogs.find(l => l.id === logId);
+export async function changeTaskForEntry(logId: number, newTaskId: number): Promise<void> {
+    const logs = await getTimeLogs();
+    const entry = logs.find(l => l.id === logId);
     if (!entry) {
         return;
     }
     entry.task = getTaskById(newTaskId);
 }
 
-export function getTimeLogs(date = new Date()): Array<TimeLog> {
-    return timeLogs;
+export function getTimeLogs(date = new Date()): Promise<Array<TimeLog>> {
+    return getDbTimelogs(date);
+
 }
 
 export function countTasksDuration(logs: Array<TimeLog>): Duration {
@@ -70,7 +74,7 @@ export function countTasksDuration(logs: Array<TimeLog>): Duration {
 }
 
 export function countPausedDuration(logs: Array<TimeLog>): Duration {
-    const pauseLogs = logs.filter(log => log.task.id === pause.id);
+    const pauseLogs = logs.filter(log => log.taskId === PAUSE.id);
     if (!pauseLogs.length) {
         return {};
     }
@@ -78,10 +82,10 @@ export function countPausedDuration(logs: Array<TimeLog>): Duration {
 }
 
 export function countWorkedDuration(logs: Array<TimeLog>): Duration {
-    const pauseLogs = logs.filter(log => log.task.id !== pause.id);
+    const pauseLogs = logs.filter(log => log.taskId !== PAUSE.id);
     if (!pauseLogs.length) {
+
         return {};
     }
     return countTasksDuration(pauseLogs);
-
 }

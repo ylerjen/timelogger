@@ -1,7 +1,7 @@
 import { Task } from "./Task";
 
 export interface Project {
-    id: number;
+    id?: number;
     name: string;
     tasks?: Array<Task>;
 }
