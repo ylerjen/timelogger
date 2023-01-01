@@ -1,7 +1,7 @@
-import { addMonths } from 'date-fns';
 import { Component } from 'react';
 import { Button } from 'primereact/button';
 import { PrimeIcons } from 'primereact/api';
+import { addMonths, format } from 'date-fns';
 import { HoursSummary } from '../../components/hours-summary/HoursSummary';
 import { getTimeLogs } from '../../services/time-service';
 import './TimesheetPage.css';
@@ -10,13 +10,15 @@ interface Props {}
 interface State {
     timesheetDate: Date;
 }
-export class TimesheetPage extends Component<Props, State> {
-    private today = new Date();
-    private timesheetDate = new Date();
-    private primeIcons = PrimeIcons;
-    state = {
-        timesheetDate: this.today,
-    };
+export class TimesheetPage extends Component<Props, State> {    
+    state: State;
+    
+    constructor(props: Props) {
+        super(props);
+        this.state = {
+            timesheetDate: new Date(),
+        };
+      }
 
     gotoMonth(offset: number): void {
         this.setState(s => ({
@@ -25,12 +27,18 @@ export class TimesheetPage extends Component<Props, State> {
         }));
     }
     
-    render() {
+    render(): JSX.Element {
+        const now = new Date();
+        const timesheetDate = this.state.timesheetDate;
+
+        const isCurrentMonth = now.getMonth() === timesheetDate.getMonth() && now.getFullYear() === timesheetDate.getFullYear();
+
+        const nextMonthButton = isCurrentMonth ? '' : <Button icon={PrimeIcons.CARET_RIGHT} iconPos="right" onClick={() => this.gotoMonth(+1)} />;
         return (<section>
-            <h1>
-                <Button icon="this.primeIcons.CARET_LEFT" iconPos="right" onClick={() => this.gotoMonth(-1)}/>
-                <span className='date-title-text'>{this.timesheetDate.toLocaleDateString('fr-CH')}</span>
-                <Button icon="{this.primeIcons.CARET_RIGHT}" iconPos="right" onClick={() => this.gotoMonth(+1)} />
+            <h1 className="timesheet-month-nav">
+                <Button icon={PrimeIcons.CARET_LEFT} iconPos="right" onClick={() => this.gotoMonth(-1)}/>
+                <span className='date-title-text'>{format(this.state.timesheetDate, 'MMMM Y')}</span>
+                {nextMonthButton}
             </h1>
             <HoursSummary timeLogs={getTimeLogs()}></HoursSummary>
         </section>);
