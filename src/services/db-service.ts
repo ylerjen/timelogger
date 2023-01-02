@@ -53,10 +53,11 @@ export function addProject(project: Project): Promise<Project> {
         });
 }
 
-export async function upsertTask(task: Task): Promise<Task> {
-    const id = await db.tasks.put(task);
-    task.id = id;
-    return task;
+export function upsertTask(task: Task): Promise<Task> {
+    return db.tasks.put(task).then(id => {
+        task.id = id;
+        return Promise.resolve(task);
+    });
 }
 
 // TIME LOGS

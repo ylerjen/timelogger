@@ -1,6 +1,6 @@
 import { Project } from "../models/Project";
 import { Task } from "../models/Task";
-import { getTasks } from "./db-service";
+import { getTasks, upsertTask } from "./db-service";
 
 const project1: Readonly<Project> = { id: 1, name: 'Timelogger' } as const;
 const project2: Readonly<Project> = { id: 2, name: 'Other' } as const;
@@ -36,4 +36,8 @@ export function getTaskById(taskId: number): Task {
 
 export function getAllTasks(): Promise<Array<Task>> {
     return getTasks();
+}
+
+export function saveTask(task: Task): Promise<Task> {
+    return upsertTask(task);
 }
