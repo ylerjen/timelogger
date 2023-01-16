@@ -8,7 +8,7 @@ export interface Prop {
 
 export function TaskSelector(p: Prop): JSX.Element {
     const projects = getAllProjects();
-    let tasks: SelectItemOptionsType = [];
+    const tasks: SelectItemOptionsType = [];
     projects.forEach(p => {
         const projectTasks = getTasksInProject(p.id!);
 
@@ -16,8 +16,8 @@ export function TaskSelector(p: Prop): JSX.Element {
             name: p.name,
             code: p.id,
             tasks: projectTasks.map(t => ({ name: t.name, code: t.id })),
-        }
-        tasks.push(pEntry as any)
+        };
+        tasks.push(pEntry as any);
     });
 
     let selectedCity: SelectItemOptionsType | undefined;
