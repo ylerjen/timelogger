@@ -12,6 +12,7 @@ import { HoursSummary } from '../../components/hours-summary/HoursSummary';
 import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
 import { changeTaskForEntry, deleteLogItem, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
 import { PAUSE } from '../../services/db-service';
+import { dailyWorkingHours } from '../../config/constant';
 import './TodayPage.css';
 
 interface State {
@@ -19,6 +20,7 @@ interface State {
     timeLogs: Array<TimeLog>;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Prop {
 }
 
@@ -36,14 +38,15 @@ export class TodayPage extends React.Component<Prop, State> {
     /**
      * This property will hold the callback to be called when select task modal is closed
      */
-    dialogCallback = (_taskId: number) => { };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    dialogCallback: (taskId: number) => void = (_taskId: number) => { };
 
     constructor(props: Prop) {
         super(props);
         this.menu = React.createRef();
         this.state = {
             isVisible: false,
-            timeLogs: [{start: new Date(), taskId: 1, id: 1}],
+            timeLogs: [{ start: new Date(), taskId: 1, id: 1 }],
         };
     }
 
@@ -85,9 +88,7 @@ export class TodayPage extends React.Component<Prop, State> {
                 this.setState({
                     timeLogs,
                 });
-                console.log(timeLogs);
             });
-
     }
 
     getCurrentWorkingLog(): TimeLog | undefined {

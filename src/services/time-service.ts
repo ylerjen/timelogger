@@ -1,8 +1,6 @@
-import { addMinutes, hoursToMinutes, intervalToDuration } from "date-fns";
-import { timeDifference } from "../helpers/TimeHelper";
-import { TimeLog } from "../models/TimeLog";
-import { getTaskById } from "./project-service";
-import { deleteDbTimeLog, getDbTimelogs, PAUSE, upsertDbTimeLog } from "./db-service";
+import { TimeLog } from '../models/TimeLog';
+import { getTaskById } from './project-service';
+import { deleteDbTimeLog, getDbTimelogs, PAUSE, upsertDbTimeLog } from './db-service';
 
 export async function deleteLogItem(logId: number): Promise<void> {
     return await deleteDbTimeLog(logId);
@@ -15,7 +13,7 @@ export function startTask(taskId: number): Promise<void | TimeLog> {
     const dbTimeLog: TimeLog = {
         start: new Date(),
         taskId,
-    }
+    };
     return upsertDbTimeLog(dbTimeLog);
 }
 
@@ -28,7 +26,7 @@ export function endTask(log: TimeLog): Promise<void | TimeLog> {
 }
 
 export function startPause(): Promise<void | TimeLog> {
-    return startTask(PAUSE.id!)
+    return startTask(PAUSE.id!);
 }
 
 export async function endPause(): Promise<void> {
@@ -38,7 +36,7 @@ export async function endPause(): Promise<void> {
         return;
     }
     await endTask(pauseLog);
-    const lastLog = logs.find(l => l.end?.getHours() === pauseLog.start.getHours() && l.end.getMinutes() === pauseLog.start.getMinutes())
+    const lastLog = logs.find(l => l.end?.getHours() === pauseLog.start.getHours() && l.end.getMinutes() === pauseLog.start.getMinutes());
     if (!lastLog) {
         return;
     }
@@ -56,36 +54,4 @@ export async function changeTaskForEntry(logId: number, newTaskId: number): Prom
 
 export function getTimeLogs(date = new Date()): Promise<Array<TimeLog>> {
     return getDbTimelogs(date);
-
-}
-
-export function countTasksDuration(logs: Array<TimeLog>): Duration {
-    const totalMinutes = logs.map(log => {
-        const start = log.start;
-        const end = log.end ?? new Date();
-        const duration = timeDifference(start, end);
-        let minutes = duration.minutes ?? 0;
-        const hours = duration.hours ?? 0;
-        return minutes + hoursToMinutes(hours);
-    }).reduce((previousVal = 0, currentVal) => previousVal + currentVal);
-    const start = new Date();
-    const end = addMinutes(start, totalMinutes);
-    return intervalToDuration({ end, start });
-}
-
-export function countPausedDuration(logs: Array<TimeLog>): Duration {
-    const pauseLogs = logs.filter(log => log.taskId === PAUSE.id);
-    if (!pauseLogs.length) {
-        return {};
-    }
-    return countTasksDuration(pauseLogs);
-}
-
-export function countWorkedDuration(logs: Array<TimeLog>): Duration {
-    const pauseLogs = logs.filter(log => log.taskId !== PAUSE.id);
-    if (!pauseLogs.length) {
-
-        return {};
-    }
-    return countTasksDuration(pauseLogs);
 }

@@ -1,19 +1,16 @@
-import React from "react";
-import { DataTableRowEditCompleteParams } from "primereact/datatable";
-import { Task } from "../../models/Task";
-import { TaskList } from "../../components/task-list/TaskList";
-import { getAllTasks, saveTask } from "../../services/project-service";
+import React from 'react';
+import { DataTableRowEditCompleteParams } from 'primereact/datatable';
+import { Task } from '../../models/Task';
+import { TaskList } from '../../components/task-list/TaskList';
+import { getAllTasks, saveTask } from '../../services/project-service';
 
-interface Prop {
-
-}
+interface Prop { }
 
 interface State {
     taskList: Array<Task>;
 }
 
-export class ProjectPage extends React.Component<Prop, State>  {
-
+export class ProjectPage extends React.Component<Prop, State> {
     state: State = { taskList: [] };
 
     componentDidMount(): void {

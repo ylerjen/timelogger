@@ -19,7 +19,7 @@ export function TaskSelector(p: Prop): JSX.Element {
         }
         tasks.push(pEntry as any)
     });
- 
+
     let selectedCity: SelectItemOptionsType | undefined;
     function setSelectedCity(val: SelectItemOptionsType) {
         selectedCity = val;
@@ -31,11 +31,11 @@ export function TaskSelector(p: Prop): JSX.Element {
             <CascadeSelect
                 value={selectedCity}
                 options={tasks}
-                optionLabel={"name"}
-                optionGroupLabel={"name"}
+                optionLabel={'name'}
+                optionGroupLabel={'name'}
                 optionGroupChildren={['tasks']}
                 style={{ minWidth: '14rem' }}
-                placeholder={"Select a Task"}
+                placeholder={'Select a Task'}
                 onChange={event => setSelectedCity(event.value)} />
         </div>
     );
