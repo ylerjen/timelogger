@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import { Button } from 'primereact/button';
+import { Skeleton } from 'primereact/skeleton';
 import { PrimeIcons } from 'primereact/api';
 import { addMonths, format } from 'date-fns';
 import { HoursSummary } from '../../components/hours-summary/HoursSummary';
@@ -13,6 +14,7 @@ interface Props { }
 interface State {
     timesheetDate: Date;
     timelogs: Array<TimeLog>;
+    isLoading: boolean;
 }
 
 export class TimesheetPage extends Component<Props, State> {
@@ -20,20 +22,40 @@ export class TimesheetPage extends Component<Props, State> {
 
     constructor(props: Props) {
         super(props);
+        const today = new Date();
         this.state = {
-            timesheetDate: new Date(),
+            timesheetDate: today,
             timelogs: [],
+            isLoading: true,
         };
-        getTimeLogs().then(timelogs => this.setState({
-            timelogs,
-        }));
+
+        this.refreshList(today);
     }
 
     gotoMonth(offset: number): void {
+        const monthDate = addMonths(this.state.timesheetDate, offset);
+        this.refreshList(monthDate);
         this.setState(s => ({
             ...s,
-            timesheetDate: addMonths(s.timesheetDate, offset),
+            timesheetDate: monthDate,
+            isLoading: true,
         }));
+    }
+
+    refreshList(timesheetMonth: Date): void {
+        getTimeLogs(timesheetMonth, 'monthly')
+            .then((timelogs) => this.setState({
+                timelogs,
+                isLoading: false,
+            }));
+    }
+
+    dataContent(): JSX.Element | Array<JSX.Element> {
+        if (this.state.isLoading) {
+            return <div className="loader">{[1, 2, 3, 4, 5].map(() => <Skeleton height="2rem" width="80%" className="mb-2"></Skeleton>)}</div>;
+        }
+
+        return <pre>{JSON.stringify(this.state.timelogs)}</pre>;
     }
 
     render(): JSX.Element {
@@ -43,6 +65,8 @@ export class TimesheetPage extends Component<Props, State> {
         const isCurrentMonth = now.getMonth() === timesheetDate.getMonth() && now.getFullYear() === timesheetDate.getFullYear();
 
         const nextMonthButton = isCurrentMonth ? '' : <Button icon={PrimeIcons.CARET_RIGHT} iconPos="right" onClick={() => this.gotoMonth(+1)} />;
+
+
         return (<section>
             <h1 className="timesheet-month-nav">
                 <Button icon={PrimeIcons.CARET_LEFT} iconPos="right" onClick={() => this.gotoMonth(-1)} />
@@ -50,6 +74,7 @@ export class TimesheetPage extends Component<Props, State> {
                 {nextMonthButton}
             </h1>
             <HoursSummary timeLogs={this.state.timelogs}></HoursSummary>
+            <div className="mt-5">{this.dataContent()}</div>
         </section>);
     }
 }

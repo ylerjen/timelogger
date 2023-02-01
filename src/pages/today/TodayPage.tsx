@@ -10,14 +10,25 @@ import { TaskActions } from '../../components/task-actions/TaskActions';
 import { TaskSelector } from '../../components/task-selector/TaskSelector';
 import { HoursSummary } from '../../components/hours-summary/HoursSummary';
 import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
-import { changeTaskForEntry, deleteLogItem, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
 import { PAUSE } from '../../services/db-service';
-import { dailyWorkingHours } from '../../config/constant';
+import { getAllTasks } from '../../services/project-service';
+import { changeTaskForEntry, deleteLogItem, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
+import { Task } from '../../models/Task';
 import './TodayPage.css';
 
 interface State {
+    /**
+     * Inform whether the modal is visible or not
+     */
     isVisible: boolean;
+    /**
+     * All the existing timelogs for the day
+     */
     timeLogs: Array<TimeLog>;
+    /**
+     * All tasks available
+     */
+    tasks: Array<Task>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -46,12 +57,13 @@ export class TodayPage extends React.Component<Prop, State> {
         this.menu = React.createRef();
         this.state = {
             isVisible: false,
-            timeLogs: [{ start: new Date(), taskId: 1, id: 1 }],
+            timeLogs: [],
+            tasks: [],
         };
     }
 
     componentDidMount(): void {
-        this.fetchLogs();
+        this.fetchTasks().then(this.fetchLogs.bind(this));
     }
 
     menuItemsFactory(logEntryId: number): Array<MenuItem> {
@@ -78,17 +90,39 @@ export class TodayPage extends React.Component<Prop, State> {
                         timeLogs: s.timeLogs.filter(l => l.id !== logEntryId),
                     }));
                 },
-            }
+            },
         ];
     }
 
-    fetchLogs(): void {
-        getTimeLogs()
+    fetchLogs(tasks?: Array<Task>): void {
+        if (!tasks) {
+            tasks = this.state.tasks || [];
+        }
+
+        getTimeLogs(new Date())
             .then(timeLogs => {
-                this.setState({
-                    timeLogs,
-                });
+                timeLogs = this.setTasksInLogs(tasks!, timeLogs);
+                this.setState({ timeLogs });
             });
+    }
+
+    fetchTasks(): Promise<Array<Task>> {
+        return getAllTasks()
+            .then(tasks => {
+                const timeLogs = this.setTasksInLogs(this.state.tasks, this.state.timeLogs);
+                this.setState({ tasks, timeLogs });
+                return Promise.resolve(tasks);
+            });
+    }
+
+    setTasksInLogs(tasks: Array<Task>, logs: Array<TimeLog>): Array<TimeLog> {
+        if (!tasks.length || !logs.length) {
+            return [];
+        }
+        return logs.map(log => {
+            log.task = tasks.find(t => t.id === log.taskId);
+            return log;
+        });
     }
 
     getCurrentWorkingLog(): TimeLog | undefined {
@@ -129,6 +163,29 @@ export class TodayPage extends React.Component<Prop, State> {
 
     onContinueWorkClick(): void {
         endPause().then(() => this.fetchLogs());
+    }
+
+    onStopAndStartNewTaskClick(): void {
+        this.dialogCallback = this.stopCurrentTaskAndStartNew;
+        this.setState({
+            isVisible: true,
+        });
+    }
+
+    stopCurrentTaskAndStartNew(taskId: number): void {
+        const currentLog = this.getCurrentWorkingLog();
+
+        endTask(currentLog)
+            .then(() => startTask(taskId))
+            .then(savedLog => {
+                if (!savedLog) {
+                    return;
+                }
+                this.setState({
+                    isVisible: false,
+                });
+                this.fetchLogs();
+            });
     }
 
     changeTask(taskId: number): void {
@@ -173,13 +230,14 @@ export class TodayPage extends React.Component<Prop, State> {
                     onEndWorkClick={this.onEndWorkClick.bind(this)}
                     onPauseWorkClick={this.onPauseWorkClick.bind(this)}
                     onStartWorkClick={this.onStartWorkClick.bind(this)}
+                    onChangeTask={this.onStopAndStartNewTaskClick.bind(this)}
                     timelogs={this.state.timeLogs}
                 ></TaskActions>
             </div>
             <div className="today-timeline">
                 <Timeline value={this.state.timeLogs}
-                    marker={(item: TimeLog) => <i className="pi pi-circle-fill" style={{ color: 'blue' /*item.task.color*/ }}></i>}
-                    opposite={(item: TimeLog) => <div className="task-info">{projectInfo(item)}<span>Task Name{/*item.task.name*/}</span></div>}
+                    marker={(item: TimeLog) => <i className="pi pi-circle-fill" style={{ color: item.task?.color }}></i>}
+                    opposite={(item: TimeLog) => <div className="task-info">{projectInfo(item)}<span>{item.task?.name}</span></div>}
                     content={(log: TimeLog) =>
                         <div className="timeline-content">
                             <div className="task-info">
@@ -196,7 +254,7 @@ export class TodayPage extends React.Component<Prop, State> {
             </div>
             <Button icon="pi pi-plus" label="Add Working Hours" className="p-button-secondary p-button-text" />
             <Dialog header="Header" visible={this.state.isVisible} style={{ width: '50vw' }} /*('displayBasic')}*/ onHide={this.hideDialog.bind(this)}>
-                <TaskSelector selectedCallback={this.dialogCallback.bind(this)}></TaskSelector>
+                <TaskSelector selectedCallback={this.dialogCallback.bind(this)} tasklist={this.state.tasks}></TaskSelector>
             </Dialog>
         </section>);
     }

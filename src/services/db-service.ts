@@ -1,14 +1,14 @@
+import { endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import Dexie from 'dexie';
-import { lastDayOfMonth } from 'date-fns';
+import { getDayEnd, getDayStart } from '../helpers/TimeHelper';
 import { Task } from '../models/Task';
-import { Project } from '../models/Project';
-import { TimeLog } from '../models/TimeLog';
+import { TimeLogEntity } from '../models/TimeLogEntity';
 
 export const PAUSE: Task = { id: 0, name: 'Pause', color: 'white' };
 
 class TimeloggerDb extends Dexie {
-    timelogs!: Dexie.Table<TimeLog, number>;
-    projects!: Dexie.Table<Project, number>;
+    timelogs!: Dexie.Table<TimeLogEntity, number>;
+
     tasks!: Dexie.Table<Task, number>;
 
     constructor() {
@@ -16,18 +16,20 @@ class TimeloggerDb extends Dexie {
 
         // Declare tables, IDs and indexes
         this.version(1).stores({
-            projects: '++id, name, color',
-            tasks: '++id, name, color, projectId',
-            timelogs: '++id, datetime, taskId',
-        });        
+            tasks: '++id',
+            timelogs: '++id, start, end',
+        });
     }
 }
 
 const db = new TimeloggerDb();
 
-// addTask(PAUSE).then().catch();
-// addTask({ id: 1, name: 'ABC', color: 'cyan' }).then().catch();
-// addTask({ id: 2, name: 'XYZ', color: 'green' }).then().catch();
+// upsertTask(PAUSE).then().catch();
+// upsertTask({ id: 1, name: 'ABC', color: 'cyan' }).then().catch();
+// upsertTask({ id: 2, name: 'DEF', color: 'green' }).then().catch();
+// upsertTask({ id: 3, name: 'GHI', color: 'yellow' }).then().catch();
+// upsertTask({ id: 4, name: 'IJK', color: 'red' }).then().catch();
+// upsertTask({ id: 5, name: 'LMN', color: 'pink' }).then().catch();
 
 // const timeLogs: Array<TimeLog> = [
 //     { id: 1, taskId: 1, start: new Date(2022, 10, 7, 8, 30), end: new Date(2022, 10, 7, 11, 0)},
@@ -37,20 +39,9 @@ const db = new TimeloggerDb();
 // ];
 // timeLogs.forEach(l => addDbTimeLog(l).then().catch());
 
-export function getProjects(): Promise<Array<Project>> {
-    return db.projects.toArray();
-}
 
 export function getTasks(): Promise<Array<Task>> {
-    return db.tasks.toArray();  
-}
-
-export function addProject(project: Project): Promise<Project> {
-    return db.projects.add(project)
-        .then(id => {
-            project.id = id;
-            return project;
-        });
+    return db.tasks.toArray();
 }
 
 export function upsertTask(task: Task): Promise<Task> {
@@ -63,25 +54,17 @@ export function upsertTask(task: Task): Promise<Task> {
 // TIME LOGS
 
 
-export function getDbTimelogs(forDate: Date = new Date(), type: 'daily' | 'monthly' = 'daily'): Promise<Array<TimeLog>> {
-    return db.timelogs.toArray();
-    
-    const query = db.timelogs.where('datetime');
-    const lowerBound = new Date(forDate.getTime());
-    let upperBound = new Date(forDate.getTime());
-    if (type === 'monthly') {
-        lowerBound.setHours(0, 0, 0, 0);
-        upperBound.setHours(23, 59, 59, 999);
-    } else {
-        lowerBound.setDate(1);
-        lowerBound.setHours(0, 0, 0, 0);
-        upperBound = lastDayOfMonth(upperBound);
-        upperBound.setHours(23, 59, 59, 999);
-    }
-    return query.between({ datetime: lowerBound }, { datetime: upperBound }).toArray();
+export function getDbTimelogs(forDate: Date = new Date(), type: 'daily' | 'monthly' = 'daily'): Promise<Array<TimeLogEntity>> {
+    const dayStart = type === 'daily' ? startOfDay(forDate) : startOfMonth(forDate);
+    const dayEnd = type === 'daily' ? endOfDay(forDate) : endOfMonth(forDate);
+
+    return db.timelogs
+        .where('start')
+        .between(dayStart.getTime(), dayEnd.getTime())
+        .toArray();
 }
 
-export async function upsertDbTimeLog(log: TimeLog): Promise<TimeLog> {
+export async function upsertDbTimeLog(log: TimeLogEntity): Promise<TimeLogEntity> {
     const id = await db.timelogs.put(log);
     log.id = id;
     return log;

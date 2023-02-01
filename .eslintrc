@@ -57,7 +57,7 @@
             "always-multiline"
         ],
         "no-cond-assign": "error",
-        "no-console": "error",
+        "no-console": "warn",
         "prefer-const": "warn",
         "no-constant-condition": "error",
         "no-control-regex": "error",

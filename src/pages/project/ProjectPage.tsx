@@ -4,7 +4,7 @@ import { Task } from '../../models/Task';
 import { TaskList } from '../../components/task-list/TaskList';
 import { getAllTasks, saveTask } from '../../services/project-service';
 
-interface Prop { }
+interface Prop { } // eslint-disable-line
 
 interface State {
     taskList: Array<Task>;
@@ -18,7 +18,6 @@ export class ProjectPage extends React.Component<Prop, State> {
     }
 
     editTask(e: DataTableRowEditCompleteParams): void {
-        console.log(e);
         const task: Task = e.newData;
         const taskToUpdate = this.state.taskList.find(t => t.id === task.id);
         if (!taskToUpdate) {

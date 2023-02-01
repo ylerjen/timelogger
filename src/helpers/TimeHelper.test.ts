@@ -37,25 +37,25 @@ describe('timeDifference', () => {
         expect(diff.hours).toBe(2);
         expect(diff.minutes).toBe(30);
     });
-}); 
+});
 
 describe('countSuppTimeDurationInSeconds', () => {
     const baseLogs: Array<TimeLog> = [
-        { taskId: 1111, start: new Date('2020-10-01T10:00:00'), end: new Date('2020-10-01T19:10:00') },
+        { taskId: 1111, start: new Date('2020-10-01T10:00:00'), end: new Date('2020-10-01T19:30:00') },
     ];
 
     test('should return the supplementary time in seconds', () => {
         const duration = countSuppTimeDurationInSeconds(baseLogs);
-        expect(duration).toBe(2760);
+        expect(duration).toBe(3960);
     });
-}); 
+});
 
 describe('countDailyWorkableTimeInSeconds', () => {
     test('should return the daily workable time in seconds', () => {
         const duration = countDailyWorkableTimeInSeconds();
         expect(duration).toBe(30240);
     });
-}); 
+});
 
 describe('countWorkedDurationInSeconds', () => {
     const baseLogs: Array<TimeLog> = [
@@ -69,7 +69,7 @@ describe('countWorkedDurationInSeconds', () => {
         const duration = countWorkedDurationInSeconds(baseLogs);
         expect(duration).toBe(7200);
     });
-}); 
+});
 
 describe('countTasksDurationInSeconds', () => {
     const baseLogs: Array<TimeLog> = [
@@ -83,7 +83,7 @@ describe('countTasksDurationInSeconds', () => {
         const duration = countTasksDurationInSeconds(baseLogs);
         expect(duration).toBe(14400);
     });
-}); 
+});
 
 describe('countPausedDurationInSeconds', () => {
     const baseLogs: Array<TimeLog> = [
@@ -97,11 +97,11 @@ describe('countPausedDurationInSeconds', () => {
         const duration = countPausedDurationInSeconds(baseLogs);
         expect(duration).toBe(7200);
     });
-}); 
+});
 
 describe('formatTimeDiff', () => {
     test('should format a given time diff into string', () => {
-        const duration = formatTimeDiff({hours: 8, minutes: 24});
+        const duration = formatTimeDiff({ hours: 8, minutes: 24 });
         expect(duration).toBe('8h 24m');
     });
 });

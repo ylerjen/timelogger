@@ -1,42 +1,28 @@
-import { CascadeSelect } from 'primereact/cascadeselect';
-import { SelectItemOptionsType } from 'primereact/selectitem';
-import { getAllProjects, getTasksInProject } from '../../services/project-service';
+import { Dropdown } from 'primereact/dropdown';
+import { Task } from '../../models/Task';
 
 export interface Prop {
     selectedCallback: (taskId: number) => void;
+    tasklist: Array<Task>;
 }
 
 export function TaskSelector(p: Prop): JSX.Element {
-    const projects = getAllProjects();
-    const tasks: SelectItemOptionsType = [];
-    projects.forEach(p => {
-        const projectTasks = getTasksInProject(p.id!);
-
-        const pEntry = {
-            name: p.name,
-            code: p.id,
-            tasks: projectTasks.map(t => ({ name: t.name, code: t.id })),
-        };
-        tasks.push(pEntry as any);
-    });
-
-    let selectedCity: SelectItemOptionsType | undefined;
-    function setSelectedCity(val: SelectItemOptionsType) {
-        selectedCity = val;
-        p.selectedCallback((val as any).code);
+    let selectedTask: Task | undefined;
+    function setSelectedTask(task: Task) {
+        debugger // eslint-disable-line
+        selectedTask = task;
+        p.selectedCallback(task.id!);
     }
 
     return (
         <div>
-            <CascadeSelect
-                value={selectedCity}
-                options={tasks}
-                optionLabel={'name'}
-                optionGroupLabel={'name'}
-                optionGroupChildren={['tasks']}
+            <Dropdown
+                value={selectedTask}
+                options={p.tasklist}
+                optionLabel="name"
                 style={{ minWidth: '14rem' }}
                 placeholder={'Select a Task'}
-                onChange={event => setSelectedCity(event.value)} />
+                onChange={event => setSelectedTask(event.value)} />
         </div>
     );
 }

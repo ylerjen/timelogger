@@ -1,34 +1,58 @@
 import { TimeLog } from '../models/TimeLog';
 import { getTaskById } from './project-service';
 import { deleteDbTimeLog, getDbTimelogs, PAUSE, upsertDbTimeLog } from './db-service';
+import { mapEntityToTimelog, mapTimeLogToEntity } from '../mappers/TimelogMapper';
 
+/**
+ * Delete an existing time log identified by its id
+ * @param logId - the id of the log to delete
+ * @returns an empty promise
+ */
 export async function deleteLogItem(logId: number): Promise<void> {
     return await deleteDbTimeLog(logId);
 }
 
+/**
+ * Starts a task by id
+ * @param taskId - the id of the task to start
+ * @returns a promise of the started pause log
+ */
 export function startTask(taskId: number): Promise<void | TimeLog> {
     if (!taskId) {
         return Promise.resolve();
     }
-    const dbTimeLog: TimeLog = {
+    const entity = mapTimeLogToEntity({
         start: new Date(),
         taskId,
-    };
-    return upsertDbTimeLog(dbTimeLog);
+    });
+
+    return upsertDbTimeLog(entity).then(mapEntityToTimelog);
 }
 
-export function endTask(log: TimeLog): Promise<void | TimeLog> {
+/**
+ * Stop a given task in progress
+ * @returns an empty promise
+ */
+export function endTask(log: TimeLog | undefined): Promise<void | TimeLog> {
     if (!log) {
-        Promise.resolve();
+        return Promise.resolve();
     }
     log.end = new Date();
-    return upsertDbTimeLog(log);
+    return upsertDbTimeLog(mapTimeLogToEntity(log)).then(mapEntityToTimelog);
 }
 
+/**
+ * Starts a pause log
+ * @returns a promise of the started pause log
+ */
 export function startPause(): Promise<void | TimeLog> {
     return startTask(PAUSE.id!);
 }
 
+/**
+ * Stop a pause in progress
+ * @returns an empty promise
+ */
 export async function endPause(): Promise<void> {
     const logs = await getTimeLogs();
     const pauseLog = logs.find(l => !l.end && l.taskId === PAUSE.id);
@@ -43,6 +67,12 @@ export async function endPause(): Promise<void> {
     await startTask(lastLog.taskId);
 }
 
+/**
+ * Change the task of an existing time log
+ * @param logId - the id of the log to update
+ * @param newTaskId - the new task id to set
+ * @returns the empty promise
+ */
 export async function changeTaskForEntry(logId: number, newTaskId: number): Promise<void> {
     const logs = await getTimeLogs();
     const entry = logs.find(l => l.id === logId);
@@ -52,6 +82,11 @@ export async function changeTaskForEntry(logId: number, newTaskId: number): Prom
     entry.task = getTaskById(newTaskId);
 }
 
-export function getTimeLogs(date = new Date()): Promise<Array<TimeLog>> {
-    return getDbTimelogs(date);
+/**
+ * Get all time logs related to a given date filter
+ * @param date - the date (day) of which we want to get the time log
+ * @returns the promise of matched time logs
+ */
+export function getTimeLogs(date = new Date(), type?: 'daily' | 'monthly'): Promise<Array<TimeLog>> {
+    return getDbTimelogs(date, type).then(logs => logs.map(mapEntityToTimelog));
 }

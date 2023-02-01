@@ -1,5 +1,8 @@
 import { Task } from './Task';
 
+/**
+ * Timelog like used in the app
+ */
 export interface TimeLog {
     id?: number;
     task?: Task;

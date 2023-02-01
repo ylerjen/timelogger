@@ -1,4 +1,4 @@
-import { intervalToDuration, Duration, minutesToMilliseconds, hoursToMilliseconds } from 'date-fns';
+import { intervalToDuration, Duration, minutesToMilliseconds, hoursToMilliseconds, setHours, setMinutes, setSeconds } from 'date-fns';
 import { TimeLog } from '../models/TimeLog';
 import { PAUSE } from '../services/db-service';
 
@@ -85,6 +85,12 @@ export function getTimeBetweenDatesInSeconds(date1: Date, date2: Date): number {
  * @returns the calculated duration
  */
 export function transformSecondsIntoDuration(timeDiffInSeconds: number): Duration {
+    const isNegativeValue = timeDiffInSeconds < 0;
+
+    if (isNegativeValue) {
+        timeDiffInSeconds = -timeDiffInSeconds;
+    }
+
     // Calculer les secondes
     const seconds = Math.floor(timeDiffInSeconds % 60);
 
@@ -113,4 +119,31 @@ export function transformSecondsIntoDuration(timeDiffInSeconds: number): Duratio
         minutes,
         seconds,
     };
+}
+
+/**
+ * Transform a date to the same date at 0h00m00s
+ * @param d - the reference date
+ * @returns the date with start day time
+ */
+export function getDayStart(d: Date): Date {
+    let dayStart = new Date(d);
+    dayStart = setHours(dayStart, 0);
+    dayStart = setMinutes(dayStart, 0);
+    dayStart = setSeconds(dayStart, 0);
+    return dayStart;
+}
+
+
+/**
+ * Transform a date to the same date at 0h00m00s
+ * @param d - the reference date
+ * @returns the date with start day time
+ */
+export function getDayEnd(d: Date): Date {
+    let dayStart = new Date(d);
+    dayStart = setHours(dayStart, 23);
+    dayStart = setMinutes(dayStart, 59);
+    dayStart = setSeconds(dayStart, 59);
+    return dayStart;
 }
