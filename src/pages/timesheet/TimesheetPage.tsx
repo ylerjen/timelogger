@@ -50,7 +50,7 @@ export class TimesheetPage extends Component<Props, State> {
             }));
     }
 
-    dataContent(): JSX.Element | Array<JSX.Element> {
+    dataContent(): JSX.Element {
         if (this.state.isLoading) {
             return <div className="loader">{[1, 2, 3, 4, 5].map(() => <Skeleton height="2rem" width="80%" className="mb-2"></Skeleton>)}</div>;
         }
