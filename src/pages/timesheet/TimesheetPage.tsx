@@ -67,7 +67,7 @@ export class TimesheetPage extends Component<Props, State> {
         const nextMonthButton = isCurrentMonth ? '' : <Button icon={PrimeIcons.CARET_RIGHT} iconPos="right" onClick={() => this.gotoMonth(+1)} />;
 
 
-        return (<section>
+        return <section>
             <h1 className="timesheet-month-nav">
                 <Button icon={PrimeIcons.CARET_LEFT} iconPos="right" onClick={() => this.gotoMonth(-1)} />
                 <span className='date-title-text'>{format(this.state.timesheetDate, 'MMMM Y')}</span>
@@ -75,6 +75,6 @@ export class TimesheetPage extends Component<Props, State> {
             </h1>
             <HoursSummary timeLogs={this.state.timelogs}></HoursSummary>
             <div className="mt-5">{this.dataContent()}</div>
-        </section>);
+        </section>;
     }
 }
