@@ -1,6 +1,5 @@
 import { endOfDay, endOfMonth, startOfDay, startOfMonth } from 'date-fns';
 import Dexie from 'dexie';
-import { getDayEnd, getDayStart } from '../helpers/TimeHelper';
 import { Task } from '../models/Task';
 import { TimeLogEntity } from '../models/TimeLogEntity';
 

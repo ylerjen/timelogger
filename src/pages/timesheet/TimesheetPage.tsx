@@ -3,10 +3,15 @@ import { Button } from 'primereact/button';
 import { Skeleton } from 'primereact/skeleton';
 import { PrimeIcons } from 'primereact/api';
 import { addMonths, format } from 'date-fns';
+import { TimeLog } from '../../models/TimeLog';
 import { HoursSummary } from '../../components/hours-summary/HoursSummary';
 import { getTimeLogs } from '../../services/time-service';
-import { TimeLog } from '../../models/TimeLog';
+import { groupLogsByDay } from '../../helpers/TimeHelper';
 import './TimesheetPage.css';
+import { TasksSummary } from '../../components/tasks-summary/TasksSummary';
+import { getAllTasks } from '../../services/project-service';
+import { Task } from '../../models/Task';
+import { DaysSummary } from '../../components/days-summary/DaysSummary';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Props { }
@@ -15,6 +20,7 @@ interface State {
     timesheetDate: Date;
     timelogs: Array<TimeLog>;
     isLoading: boolean;
+    tasks: Array<Task>;
 }
 
 export class TimesheetPage extends Component<Props, State> {
@@ -27,9 +33,15 @@ export class TimesheetPage extends Component<Props, State> {
             timesheetDate: today,
             timelogs: [],
             isLoading: true,
+            tasks: [],
         };
+    }
 
-        this.refreshList(today);
+    componentDidMount(): void {
+        getAllTasks().then(tasks => {
+            this.setState({ tasks });
+            this.refreshList(this.state.timesheetDate);
+        });
     }
 
     gotoMonth(offset: number): void {
@@ -44,18 +56,21 @@ export class TimesheetPage extends Component<Props, State> {
 
     refreshList(timesheetMonth: Date): void {
         getTimeLogs(timesheetMonth, 'monthly')
-            .then((timelogs) => this.setState({
-                timelogs,
-                isLoading: false,
-            }));
+            .then(timelogs => {
+                timelogs.forEach(t => t.task = this.state.tasks.find(task => task.id === t.taskId));
+                this.setState({
+                    timelogs,
+                    isLoading: false,
+                });
+            });
     }
 
     dataContent(): JSX.Element {
         if (this.state.isLoading) {
-            return <div className="loader">{[1, 2, 3, 4, 5].map(() => <Skeleton height="2rem" width="80%" className="mb-2"></Skeleton>)}</div>;
+            return <div className="loader">{[1, 2, 3, 4, 5].map(id => <Skeleton key={id} height="2rem" width="80%" className="mb-2"></Skeleton>)}</div>;
         }
-
-        return <pre>{JSON.stringify(this.state.timelogs)}</pre>;
+        return <DaysSummary timelogs={this.state.timelogs} />;
+        // return <ol>{daysLogged.map(d => <li key={d[0]} data-id={d[0]}>----</li>)}</ol>;
     }
 
     render(): JSX.Element {
@@ -73,7 +88,9 @@ export class TimesheetPage extends Component<Props, State> {
                 <span className='date-title-text'>{format(this.state.timesheetDate, 'MMMM Y')}</span>
                 {nextMonthButton}
             </h1>
-            <HoursSummary timeLogs={this.state.timelogs}></HoursSummary>
+            <h2>Tasks</h2>
+            <TasksSummary timelogs={this.state.timelogs} />
+            <h2>Days</h2>
             <div className="mt-5">{this.dataContent()}</div>
         </section>;
     }

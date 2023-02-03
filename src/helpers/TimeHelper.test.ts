@@ -1,5 +1,5 @@
 import { TimeLog } from '../models/TimeLog';
-import { countDailyWorkableTimeInSeconds, countPausedDurationInSeconds, countSuppTimeDurationInSeconds, countTasksDurationInSeconds, countWorkedDurationInSeconds, formatTimeDiff, getWorkedLogs, timeDifference } from './TimeHelper';
+import { countDailyWorkableTimeInSeconds, countPausedDurationInSeconds, countSuppTimeDurationInSeconds, countTasksDurationInSeconds, countWorkedDurationInSeconds, formatTimeDiff, getWorkedLogs, groupLogsByDay, groupLogsByTasks, timeDifference } from './TimeHelper';
 import { PAUSE } from '../services/db-service';
 
 describe('getWorkedLogs', () => {
@@ -103,5 +103,31 @@ describe('formatTimeDiff', () => {
     test('should format a given time diff into string', () => {
         const duration = formatTimeDiff({ hours: 8, minutes: 24 });
         expect(duration).toBe('8h 24m');
+    });
+});
+
+fdescribe('groupLogsByDay', () => {
+    test('should group logs by day', () => {
+        const logs: Array<TimeLog> = [
+            { id: 1, start: new Date(2022, 2, 1), end: new Date(2022, 2, 1), taskId: 1 },
+            { id: 2, start: new Date(2022, 2, 1), end: new Date(2022, 2, 1), taskId: 1 },
+            { id: 3, start: new Date(2022, 2, 2), end: new Date(2022, 2, 2), taskId: 1 },
+        ];
+
+        const groupedResult = groupLogsByDay(logs);
+        expect(groupedResult.size).toBe(2);
+    });
+});
+
+fdescribe('groupLogsByTasks', () => {
+    test('should group logs by day', () => {
+        const logs: Array<TimeLog> = [
+            { id: 1, start: new Date(2022, 2, 1), end: new Date(2022, 2, 1), taskId: 1 },
+            { id: 2, start: new Date(2022, 2, 1), end: new Date(2022, 2, 1), taskId: 2 },
+            { id: 3, start: new Date(2022, 2, 1), end: new Date(2022, 2, 1), taskId: 1 },
+        ];
+
+        const groupedResult = groupLogsByTasks(logs);
+        expect(groupedResult.size).toBe(2);
     });
 });

@@ -8,8 +8,8 @@ export interface Prop {
 
 export function TaskSelector(p: Prop): JSX.Element {
     let selectedTask: Task | undefined;
+
     function setSelectedTask(task: Task) {
-        debugger // eslint-disable-line
         selectedTask = task;
         p.selectedCallback(task.id!);
     }

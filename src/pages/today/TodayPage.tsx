@@ -219,7 +219,6 @@ export class TodayPage extends React.Component<Prop, State> {
     }
 
     render(): JSX.Element {
-        const projectInfo = (log: TimeLog) => log.taskId === PAUSE.id ? '' : <span className='muted'>{/*log.task.project?.name ||*/ 'XXX'}</span>;
         return (<section>
             <h1>Today</h1>
             <h2 className='today-date'>{format(this.now, 'dd-MM-Y')}</h2>
@@ -237,12 +236,12 @@ export class TodayPage extends React.Component<Prop, State> {
             <div className="today-timeline">
                 <Timeline value={this.state.timeLogs}
                     marker={(item: TimeLog) => <i className="pi pi-circle-fill" style={{ color: item.task?.color }}></i>}
-                    opposite={(item: TimeLog) => <div className="task-info">{projectInfo(item)}<span>{item.task?.name}</span></div>}
+                    opposite={(item: TimeLog) => <div className="task-info">{item.task?.name}</div>}
                     content={(log: TimeLog) =>
                         <div className="timeline-content">
                             <div className="task-info">
-                                <div className="muted"><span>{format(log.start, 'HH:mm')}</span> - <span>{log.end ? format(log.end, 'HH:mm') : 'OPEN'}</span></div>
                                 <div>{formatTimeDiff(timeDifference(log.start, log.end))}</div>
+                                <div className="muted"><span>{format(log.start, 'HH:mm')}</span> - <span>{log.end ? format(log.end, 'HH:mm') : 'OPEN'}</span></div>
                             </div>
                             <div className="today-task-actions">
                                 <Menu model={this.menuItemsFactory(log.id!)} popup ref={this.menu} />

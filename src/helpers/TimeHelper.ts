@@ -1,4 +1,4 @@
-import { intervalToDuration, Duration, minutesToMilliseconds, hoursToMilliseconds, setHours, setMinutes, setSeconds } from 'date-fns';
+import { intervalToDuration, Duration, minutesToMilliseconds, hoursToMilliseconds, setHours, setMinutes, setSeconds, formatISO9075 } from 'date-fns';
 import { TimeLog } from '../models/TimeLog';
 import { PAUSE } from '../services/db-service';
 
@@ -21,13 +21,22 @@ export function formatTimeDiff(duration: Duration): string {
     return `${h}h ${m}m`;
 }
 
-export function countTasksDurationInSeconds(logs: Array<TimeLog>): number {
-    const totalSeconds = logs.map(log => {
-        const start = log.start;
-        const end = log.end ?? new Date();
-        const durationInSeconds = getTimeBetweenDatesInSeconds(start, end);
-        return durationInSeconds;
-    }).reduce((previousVal = 0, currentVal) => previousVal + currentVal);
+/**
+ * Count the worked task duration in seconds
+ * @param logs - the list of logs
+ * @param taskId - an optional task id if we want to count some tasks only
+ * @returns the number of worked seconds
+ */
+export function countTasksDurationInSeconds(logs: Array<TimeLog>, taskId?: number): number {
+    const totalSeconds = logs
+        .filter(l => !taskId || taskId === l.taskId)
+        .map(log => {
+            const start = log.start;
+            const end = log.end ?? new Date();
+            const durationInSeconds = getTimeBetweenDatesInSeconds(start, end);
+            return durationInSeconds;
+        })
+        .reduce((previousVal = 0, currentVal) => previousVal + currentVal);
     return totalSeconds;
 }
 
@@ -121,29 +130,30 @@ export function transformSecondsIntoDuration(timeDiffInSeconds: number): Duratio
     };
 }
 
-/**
- * Transform a date to the same date at 0h00m00s
- * @param d - the reference date
- * @returns the date with start day time
- */
-export function getDayStart(d: Date): Date {
-    let dayStart = new Date(d);
-    dayStart = setHours(dayStart, 0);
-    dayStart = setMinutes(dayStart, 0);
-    dayStart = setSeconds(dayStart, 0);
-    return dayStart;
+export function groupLogsByDay(logs: Array<TimeLog>): Map<string, Array<TimeLog>> {
+    const obj = new Map();
+    logs.forEach(l => {
+        const dateString = formatISO9075(l.start, { representation: 'date' });
+        if (!obj.has(dateString)) {
+            obj.set(dateString, []);
+        }
+        obj.get(dateString).push(l);
+    });
+    return obj;
 }
 
-
 /**
- * Transform a date to the same date at 0h00m00s
- * @param d - the reference date
- * @returns the date with start day time
+ * Groups some logs by task in a Map having the taskId has key and logs as values
+ * @param logs - the logs to group
+ * @returns a map of grouped logs
  */
-export function getDayEnd(d: Date): Date {
-    let dayStart = new Date(d);
-    dayStart = setHours(dayStart, 23);
-    dayStart = setMinutes(dayStart, 59);
-    dayStart = setSeconds(dayStart, 59);
-    return dayStart;
+export function groupLogsByTasks(logs: Array<TimeLog>): Map<string, Array<TimeLog>> {
+    const obj = new Map();
+    logs.forEach(l => {
+        if (!obj.has(l.taskId)) {
+            obj.set(l.taskId, []);
+        }
+        obj.get(l.taskId).push(l);
+    });
+    return obj;
 }
