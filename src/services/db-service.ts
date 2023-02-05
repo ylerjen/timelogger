@@ -43,6 +43,10 @@ export function getTasks(): Promise<Array<Task>> {
     return db.tasks.toArray();
 }
 
+export function getTaskById(id: number): Promise<Task | undefined> {
+    return db.tasks.get(id);
+}
+
 export function upsertTask(task: Task): Promise<Task> {
     return db.tasks.put(task).then(id => {
         task.id = id;

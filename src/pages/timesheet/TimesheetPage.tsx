@@ -3,15 +3,13 @@ import { Button } from 'primereact/button';
 import { Skeleton } from 'primereact/skeleton';
 import { PrimeIcons } from 'primereact/api';
 import { addMonths, format } from 'date-fns';
-import { TimeLog } from '../../models/TimeLog';
-import { HoursSummary } from '../../components/hours-summary/HoursSummary';
-import { getTimeLogs } from '../../services/time-service';
-import { groupLogsByDay } from '../../helpers/TimeHelper';
-import './TimesheetPage.css';
-import { TasksSummary } from '../../components/tasks-summary/TasksSummary';
-import { getAllTasks } from '../../services/project-service';
 import { Task } from '../../models/Task';
+import { TimeLog } from '../../models/TimeLog';
 import { DaysSummary } from '../../components/days-summary/DaysSummary';
+import { TasksSummary } from '../../components/tasks-summary/TasksSummary';
+import { getTimeLogs } from '../../services/time-service';
+import { getAllTasks } from '../../services/project-service';
+import './TimesheetPage.css';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface Props { }
@@ -70,7 +68,6 @@ export class TimesheetPage extends Component<Props, State> {
             return <div className="loader">{[1, 2, 3, 4, 5].map(id => <Skeleton key={id} height="2rem" width="80%" className="mb-2"></Skeleton>)}</div>;
         }
         return <DaysSummary timelogs={this.state.timelogs} />;
-        // return <ol>{daysLogged.map(d => <li key={d[0]} data-id={d[0]}>----</li>)}</ol>;
     }
 
     render(): JSX.Element {
@@ -81,7 +78,6 @@ export class TimesheetPage extends Component<Props, State> {
 
         const nextMonthButton = isCurrentMonth ? '' : <Button icon={PrimeIcons.CARET_RIGHT} iconPos="right" onClick={() => this.gotoMonth(+1)} />;
 
-
         return <section>
             <h1 className="timesheet-month-nav">
                 <Button icon={PrimeIcons.CARET_LEFT} iconPos="right" onClick={() => this.gotoMonth(-1)} />
@@ -89,9 +85,13 @@ export class TimesheetPage extends Component<Props, State> {
                 {nextMonthButton}
             </h1>
             <h2>Tasks</h2>
-            <TasksSummary timelogs={this.state.timelogs} />
-            <h2>Days</h2>
-            <div className="mt-5">{this.dataContent()}</div>
+            <div className="d-flex justify-content-center">
+                <TasksSummary timelogs={this.state.timelogs} />
+            </div>
+            <h2 className="mt-5">Days</h2>
+            <div className="d-flex justify-content-center">
+                <div>{this.dataContent()}</div>
+            </div>
         </section>;
     }
 }

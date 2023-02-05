@@ -1,6 +1,6 @@
 import { TimeLog } from '../models/TimeLog';
 import { getTaskById } from './project-service';
-import { deleteDbTimeLog, getDbTimelogs, PAUSE, upsertDbTimeLog } from './db-service';
+import { deleteDbTimeLog, getDbTimelogs, PAUSE, upsertDbTimeLog, upsertTask } from './db-service';
 import { mapEntityToTimelog, mapTimeLogToEntity } from '../mappers/TimelogMapper';
 
 /**
@@ -73,13 +73,17 @@ export async function endPause(): Promise<void> {
  * @param newTaskId - the new task id to set
  * @returns the empty promise
  */
-export async function changeTaskForEntry(logId: number, newTaskId: number): Promise<void> {
+export async function changeTaskForEntry(logId: number, newTaskId: number): Promise<TimeLog | undefined> {
     const logs = await getTimeLogs();
-    const entry = logs.find(l => l.id === logId);
-    if (!entry) {
+    const log = logs.find(l => l.id === logId);
+    if (!log) {
         return;
     }
-    entry.task = getTaskById(newTaskId);
+    log.taskId = newTaskId;
+    const entity = await upsertDbTimeLog(mapTimeLogToEntity(log));
+    const l = mapEntityToTimelog(entity);
+    l.task = await getTaskById(newTaskId);
+    return l;
 }
 
 /**

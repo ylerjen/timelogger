@@ -10,7 +10,6 @@ import { TaskActions } from '../../components/task-actions/TaskActions';
 import { TaskSelector } from '../../components/task-selector/TaskSelector';
 import { HoursSummary } from '../../components/hours-summary/HoursSummary';
 import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
-import { PAUSE } from '../../services/db-service';
 import { getAllTasks } from '../../services/project-service';
 import { changeTaskForEntry, deleteLogItem, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
 import { Task } from '../../models/Task';
@@ -29,6 +28,14 @@ interface State {
      * All tasks available
      */
     tasks: Array<Task>;
+    /**
+     * Timestamp to update the UI every minutes and keep times up to date
+     */
+    timestamp: number;
+    /**
+     * Menu item of the task button clicked
+     */
+    taskChangeMenu: Array<MenuItem>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -42,9 +49,11 @@ export class TodayPage extends React.Component<Prop, State> {
 
     state: State;
 
-    menu: any;
+    menu = React.createRef<Menu>();
 
     processedEntry: number | null = null;
+
+    timer: NodeJS.Timer | undefined;
 
     /**
      * This property will hold the callback to be called when select task modal is closed
@@ -54,22 +63,28 @@ export class TodayPage extends React.Component<Prop, State> {
 
     constructor(props: Prop) {
         super(props);
-        this.menu = React.createRef();
         this.state = {
             isVisible: false,
             timeLogs: [],
             tasks: [],
+            timestamp: Date.now(),
+            taskChangeMenu: [],
         };
     }
 
     componentDidMount(): void {
         this.fetchTasks().then(this.fetchLogs.bind(this));
+        this.timer = setInterval(() => this.setState({ timestamp: Date.now() }), 60 * 1000);
+    }
+
+    componentWillUnmount(): void {
+        this.timer = void 0;
     }
 
     menuItemsFactory(logEntryId: number): Array<MenuItem> {
         return [
             {
-                label: 'Change Task' + logEntryId,
+                label: 'Change Task >> ' + logEntryId,
                 icon: 'pi pi-pencil',
                 command: () => {
                     this.processedEntry = logEntryId;
@@ -189,15 +204,18 @@ export class TodayPage extends React.Component<Prop, State> {
     }
 
     changeTask(taskId: number): void {
+        debugger; // eslint-disable-line no-debugger
         if (this.processedEntry === null) {
             return;
         }
-        changeTaskForEntry(this.processedEntry, taskId);
-        this.setState({
-            isVisible: false,
-        });
-        this.fetchLogs();
-        this.processedEntry = null;
+        changeTaskForEntry(this.processedEntry, taskId)
+            .then(log => {
+                this.setState({
+                    isVisible: false,
+                });
+                this.fetchLogs();
+                this.processedEntry = null;
+            });
     }
 
     startTask(taskId: number): void {
@@ -241,15 +259,25 @@ export class TodayPage extends React.Component<Prop, State> {
                         <div className="timeline-content">
                             <div className="task-info">
                                 <div>{formatTimeDiff(timeDifference(log.start, log.end))}</div>
-                                <div className="muted"><span>{format(log.start, 'HH:mm')}</span> - <span>{log.end ? format(log.end, 'HH:mm') : 'OPEN'}</span></div>
+                                <div className="muted">
+                                    <span>{format(log.start, 'HH:mm')}</span> - <span>{log.end ? format(log.end, 'HH:mm') : 'OPEN'}</span>
+                                </div>
                             </div>
                             <div className="today-task-actions">
-                                <Menu model={this.menuItemsFactory(log.id!)} popup ref={this.menu} />
-                                <Button label="Show" icon="pi pi-bars" className='p-button p-component p-button-rounded p-button-outlined p-button-icon-only' onClick={(event) => (this.menu.current as any).toggle(event)} />
+                                <Button
+                                    label="Show"
+                                    icon="pi pi-bars"
+                                    className='p-button p-component p-button-rounded p-button-outlined p-button-icon-only'
+                                    onClick={event => {
+                                        this.setState({ taskChangeMenu: this.menuItemsFactory(log.id!) });
+                                        this.menu.current?.toggle(event);
+                                    }}
+                                />
                             </div>
                         </div>
                     }
                 />
+                <Menu model={this.state.taskChangeMenu} popup ref={this.menu} />
             </div>
             <Button icon="pi pi-plus" label="Add Working Hours" className="p-button-secondary p-button-text" />
             <Dialog header="Header" visible={this.state.isVisible} style={{ width: '50vw' }} /*('displayBasic')}*/ onHide={this.hideDialog.bind(this)}>

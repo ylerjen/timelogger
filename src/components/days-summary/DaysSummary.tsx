@@ -13,8 +13,7 @@ export function DaysSummary(p: Prop): JSX.Element {
         <thead><tr><th>Day</th><th>Hours</th></tr></thead>
         <tbody>{daysLogged.map(arr => <tr key={arr[0]}>
             <td>{arr[0]}</td>
-            <td>{formatTimeDiff(transformSecondsIntoDuration(countWorkedDurationInSeconds(arr[1])))}</td>
-        </tr>)}
-        </tbody>
+            <td className='pl-5'>{formatTimeDiff(transformSecondsIntoDuration(countWorkedDurationInSeconds(arr[1])))}</td>
+        </tr>)}</tbody>
     </table>;
 }

@@ -16,6 +16,6 @@ export function TasksSummary(p: Prop): JSX.Element {
         <thead><tr><th>Task</th><th>Hours</th></tr></thead>
         <tbody>{keys.map(k => <tr key={k[0]}>
             <td>{k[1]}</td>
-            <td>{formatTimeDiff(transformSecondsIntoDuration(countWorkedDurationInSeconds(byTasks.get(k[0]!)!)))}</td></tr>)}</tbody>
+            <td className='pl-5'>{formatTimeDiff(transformSecondsIntoDuration(countWorkedDurationInSeconds(byTasks.get(k[0]!)!)))}</td></tr>)}</tbody>
     </table>;
 }

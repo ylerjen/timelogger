@@ -37,3 +37,7 @@ code {
     margin-left: 0.5rem;
     line-height: 1;
 }
+
+.d-flex {
+    display: flex;
+}
