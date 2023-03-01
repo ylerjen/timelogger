@@ -13,6 +13,8 @@ import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
 import { getAllTasks } from '../../services/project-service';
 import { changeTaskForEntry, deleteLogItem, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
 import { Task } from '../../models/Task';
+import { notifyMe } from '../../services/notification.service';
+import { TimeManager } from '../../components/time-manager/TimeManager';
 import './TodayPage.css';
 
 interface State {
@@ -20,6 +22,10 @@ interface State {
      * Inform whether the modal is visible or not
      */
     isVisible: boolean;
+    /**
+     * Inform whether the modal to change time is visible or not
+     */
+    isTimeManagerVisible: boolean;
     /**
      * All the existing timelogs for the day
      */
@@ -65,6 +71,7 @@ export class TodayPage extends React.Component<Prop, State> {
         super(props);
         this.state = {
             isVisible: false,
+            isTimeManagerVisible: false,
             timeLogs: [],
             tasks: [],
             timestamp: Date.now(),
@@ -94,8 +101,17 @@ export class TodayPage extends React.Component<Prop, State> {
                     });
                 },
             },
-            { label: 'Edit Working Time', icon: 'pi pi-clock' },
-            { label: 'Split Up', icon: 'pi pi-clone' },
+            {
+                label: 'Edit Working Time',
+                icon: 'pi pi-clock',
+                command: () => {
+                    this.processedEntry = logEntryId;
+                    this.setState({
+                        isTimeManagerVisible: true,
+                    });
+                }
+            },
+            { label: 'Split Up', icon: 'pi pi-clone', command: () => notifyMe('hell00') },
             {
                 label: 'Delete',
                 icon: 'pi pi-trash',
@@ -236,6 +252,10 @@ export class TodayPage extends React.Component<Prop, State> {
         });
     }
 
+    changeTimeLogHours(start: Date, end: Date): void {
+        console.log({start, end});
+    }
+
     render(): JSX.Element {
         return (<section>
             <h1>Today</h1>
@@ -282,6 +302,10 @@ export class TodayPage extends React.Component<Prop, State> {
             <Button icon="pi pi-plus" label="Add Working Hours" className="p-button-secondary p-button-text" />
             <Dialog header="Header" visible={this.state.isVisible} style={{ width: '50vw' }} /*('displayBasic')}*/ onHide={this.hideDialog.bind(this)}>
                 <TaskSelector selectedCallback={this.dialogCallback.bind(this)} tasklist={this.state.tasks}></TaskSelector>
+            </Dialog>
+
+            <Dialog header="Header" visible={this.state.isTimeManagerVisible} style={{ width: '50vw' }} onHide={this.hideDialog.bind(this)}>
+                <TimeManager start={new Date()} end={new Date()} onSave={this.changeTimeLogHours.bind(this)} onCancel={this.hideDialog.bind(this)} />
             </Dialog>
         </section>);
     }

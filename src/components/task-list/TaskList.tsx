@@ -33,7 +33,6 @@ export function TaskList(prop: Prop): JSX.Element {
             <Column field="id" header="id"></Column>
             <Column field="name" header="Name" editor={(options) => textEditor(options)}></Column>
             <Column field="color" body={colorViewerTpl} header="Color" editor={(options) => colorEditor(options)}></Column>
-            <Column field="projectId" header="Project id"></Column>
             <Column rowEditor headerStyle={{ width: '10%', minWidth: '8rem' }} bodyStyle={{ textAlign: 'center' }}></Column>
         </DataTable>
     );

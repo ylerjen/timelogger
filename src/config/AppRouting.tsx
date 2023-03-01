@@ -1,37 +1,29 @@
-import { createBrowserRouter } from "react-router-dom";
-import { ProjectPage } from "../pages/project/ProjectPage";
-import { SettingsPage } from "../pages/settings/SettingsPage";
-import { TimesheetPage } from "../pages/timesheet/TimesheetPage";
-import { TodayPage } from "../pages/today/TodayPage";
-import { projectRoute, timesheetRoute, todayRoute } from "./RouteBuilder";
+import { createBrowserRouter } from 'react-router-dom';
+import { TasksPage } from '../pages/tasks/TasksPage';
+import { SettingsPage } from '../pages/settings/SettingsPage';
+import { TimesheetPage } from '../pages/timesheet/TimesheetPage';
+import { TodayPage } from '../pages/today/TodayPage';
+import { projectRoute, timesheetRoute, todayRoute } from './RouteBuilder';
 
 export const router = createBrowserRouter([
     {
-        path: "/",
-        element: (
-            <TodayPage />
-        ),
+        path: '/',
+        element: <TodayPage />,
     },
     {
         path: todayRoute,
-        element: (
-            <TodayPage />
-        ),
+        element: <TodayPage />,
     },
     {
         path: projectRoute,
-        element: (
-            <ProjectPage />
-        ),
+        element: <TasksPage />,
     },
     {
         path: timesheetRoute,
-        element: (
-            <TimesheetPage />
-        ),
+        element: <TimesheetPage />,
     },
     {
-        path: "/settings",
+        path: '/settings',
         element: <SettingsPage />,
     },
 ]);
