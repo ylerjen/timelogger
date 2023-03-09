@@ -11,7 +11,7 @@ import { TaskSelector } from '../../components/task-selector/TaskSelector';
 import { HoursSummary } from '../../components/hours-summary/HoursSummary';
 import { formatTimeDiff, timeDifference } from '../../helpers/TimeHelper';
 import { getAllTasks } from '../../services/project-service';
-import { changeTaskForEntry, deleteLogItem, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
+import { changeLogTime, changeTaskForEntry, deleteLogItem, endPause, endTask, getTimeLogs, startPause, startTask } from '../../services/time-service';
 import { Task } from '../../models/Task';
 import { notifyMe } from '../../services/notification.service';
 import { TimeManager } from '../../components/time-manager/TimeManager';
@@ -21,7 +21,7 @@ interface State {
     /**
      * Inform whether the modal is visible or not
      */
-    isVisible: boolean;
+    isTaskSwitchVisible: boolean;
     /**
      * Inform whether the modal to change time is visible or not
      */
@@ -49,8 +49,6 @@ interface Prop {
 }
 
 export class TodayPage extends React.Component<Prop, State> {
-    isVisible = false;
-
     now = Date.now();
 
     state: State;
@@ -70,7 +68,7 @@ export class TodayPage extends React.Component<Prop, State> {
     constructor(props: Prop) {
         super(props);
         this.state = {
-            isVisible: false,
+            isTaskSwitchVisible: false,
             isTimeManagerVisible: false,
             timeLogs: [],
             tasks: [],
@@ -91,13 +89,13 @@ export class TodayPage extends React.Component<Prop, State> {
     menuItemsFactory(logEntryId: number): Array<MenuItem> {
         return [
             {
-                label: 'Change Task >> ' + logEntryId,
+                label: 'Change Task',
                 icon: 'pi pi-pencil',
                 command: () => {
                     this.processedEntry = logEntryId;
                     this.dialogCallback = this.changeTask;
                     this.setState({
-                        isVisible: true,
+                        isTaskSwitchVisible: true,
                     });
                 },
             },
@@ -109,7 +107,7 @@ export class TodayPage extends React.Component<Prop, State> {
                     this.setState({
                         isTimeManagerVisible: true,
                     });
-                }
+                },
             },
             { label: 'Split Up', icon: 'pi pi-clone', command: () => notifyMe('hell00') },
             {
@@ -168,7 +166,7 @@ export class TodayPage extends React.Component<Prop, State> {
     onStartWorkClick(): void {
         this.dialogCallback = this.startTask;
         this.setState({
-            isVisible: true,
+            isTaskSwitchVisible: true,
         });
     }
 
@@ -199,7 +197,7 @@ export class TodayPage extends React.Component<Prop, State> {
     onStopAndStartNewTaskClick(): void {
         this.dialogCallback = this.stopCurrentTaskAndStartNew;
         this.setState({
-            isVisible: true,
+            isTaskSwitchVisible: true,
         });
     }
 
@@ -213,7 +211,7 @@ export class TodayPage extends React.Component<Prop, State> {
                     return;
                 }
                 this.setState({
-                    isVisible: false,
+                    isTaskSwitchVisible: false,
                 });
                 this.fetchLogs();
             });
@@ -227,7 +225,7 @@ export class TodayPage extends React.Component<Prop, State> {
         changeTaskForEntry(this.processedEntry, taskId)
             .then(log => {
                 this.setState({
-                    isVisible: false,
+                    isTaskSwitchVisible: false,
                 });
                 this.fetchLogs();
                 this.processedEntry = null;
@@ -240,24 +238,47 @@ export class TodayPage extends React.Component<Prop, State> {
                 return;
             }
             this.setState({
-                isVisible: false,
+                isTaskSwitchVisible: false,
             });
             this.fetchLogs();
         });
     }
 
-    hideDialog(): void {
+    hideTaskSwitch(): void {
         this.setState({
-            isVisible: false,
+            isTaskSwitchVisible: false,
         });
+        this.processedEntry = null;
+    }
+
+    closeTimeManager(): void {
+        this.setState({
+            isTimeManagerVisible: false,
+        });
+        this.processedEntry = null;
     }
 
     changeTimeLogHours(start: Date, end: Date): void {
-        console.log({start, end});
+        console.log({ start, end });
+
+        const log = this.state.timeLogs.find(l => l.id === this.processedEntry);
+        if (!log) {
+            this.processedEntry = null;
+            return;
+        }
+
+        changeLogTime(log, start, log.end ? end : void 0)
+            .then(log => {
+                this.setState({
+                    isTimeManagerVisible: false,
+                });
+                this.fetchLogs();
+                this.processedEntry = null;
+            });
     }
 
     render(): JSX.Element {
-        return (<section>
+        return <section>
             <h1>Today</h1>
             <h2 className='today-date'>{format(this.now, 'dd-MM-Y')}</h2>
             <HoursSummary timeLogs={this.state.timeLogs}></HoursSummary>
@@ -300,13 +321,23 @@ export class TodayPage extends React.Component<Prop, State> {
                 <Menu model={this.state.taskChangeMenu} popup ref={this.menu} />
             </div>
             <Button icon="pi pi-plus" label="Add Working Hours" className="p-button-secondary p-button-text" />
-            <Dialog header="Header" visible={this.state.isVisible} style={{ width: '50vw' }} /*('displayBasic')}*/ onHide={this.hideDialog.bind(this)}>
+            <Dialog header="Header"
+                visible={this.state.isTaskSwitchVisible}
+                style={{ width: '50vw' }} /*('displayBasic')}*/
+                onHide={this.hideTaskSwitch.bind(this)}>
                 <TaskSelector selectedCallback={this.dialogCallback.bind(this)} tasklist={this.state.tasks}></TaskSelector>
             </Dialog>
 
-            <Dialog header="Header" visible={this.state.isTimeManagerVisible} style={{ width: '50vw' }} onHide={this.hideDialog.bind(this)}>
-                <TimeManager start={new Date()} end={new Date()} onSave={this.changeTimeLogHours.bind(this)} onCancel={this.hideDialog.bind(this)} />
+            <Dialog header="Header"
+                visible={this.state.isTimeManagerVisible}
+                style={{ width: '50vw' }}
+                onHide={this.closeTimeManager.bind(this)}>
+                <TimeManager
+                    start={new Date()} end={new Date()}
+                    onSave={this.changeTimeLogHours.bind(this)}
+                    onCancel={this.closeTimeManager.bind(this)}
+                />
             </Dialog>
-        </section>);
+        </section>;
     }
 }

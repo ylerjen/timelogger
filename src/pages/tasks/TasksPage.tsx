@@ -3,6 +3,7 @@ import { DataTableRowEditCompleteParams } from 'primereact/datatable';
 import { Task } from '../../models/Task';
 import { TaskList } from '../../components/task-list/TaskList';
 import { getAllTasks, saveTask } from '../../services/project-service';
+import { Button } from 'primereact/button';
 
 interface Prop { } //  eslint-disable-line
 
@@ -17,16 +18,43 @@ export class TasksPage extends React.Component<Prop, State> {
         getAllTasks().then(taskList => this.setState({ taskList }));
     }
 
+    addTask(): void {
+        const task: Task = {
+            color: '#fff',
+            name: 'new task',
+        };
+        saveTask(task).then(
+            t => this.setState(s => ({
+                taskList: [
+                    ...s.taskList,
+                    t,
+                ],
+            }))
+        );
+    }
+
     editTask(e: DataTableRowEditCompleteParams): void {
         const task: Task = e.newData;
-        const taskToUpdate = this.state.taskList.find(t => t.id === task.id);
-        if (!taskToUpdate) {
+        this.updateTask(task.id!, { color: task.color, name: task.name, isArchived: task.isArchived });
+    }
+
+    deleteTask(id: number): void {
+        this.updateTask(id, { isArchived: true });
+    }
+
+    updateTask(id: number, val: Partial<Task>): void {
+        const tasklist = this.state.taskList;
+        const idx = tasklist.findIndex(t => t.id === id);
+        if (idx === -1) {
             return;
         }
-        taskToUpdate.color = task.color;
-        taskToUpdate.name = task.name;
-        saveTask(taskToUpdate).then(
-            t => this.setState(s => ({
+        tasklist[idx] = {
+            ...tasklist[idx],
+            ...val,
+        };
+
+        saveTask(tasklist[idx]).then(
+            _t => this.setState(s => ({
                 taskList: [...s.taskList],
             }))
         );
@@ -36,7 +64,18 @@ export class TasksPage extends React.Component<Prop, State> {
         return (
             <section>
                 <h1>Projects page</h1>
-                <TaskList tasks={this.state.taskList} editTask={this.editTask.bind(this)}></TaskList>
+                <Button
+                    label="Add new task"
+                    icon="pi pi-plus"
+                    className='p-button p-component p-button-rounded p-button-outlined'
+                    onClick={this.addTask.bind(this)}
+                />
+                <TaskList
+                    withArchived={false}
+                    tasks={this.state.taskList}
+                    editTask={this.editTask.bind(this)}
+                    deleteTask={this.deleteTask.bind(this)}
+                ></TaskList>
             </section>
         );
     }

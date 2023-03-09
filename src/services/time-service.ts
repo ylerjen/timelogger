@@ -1,6 +1,6 @@
 import { TimeLog } from '../models/TimeLog';
 import { getTaskById } from './project-service';
-import { deleteDbTimeLog, getDbTimelogs, PAUSE, upsertDbTimeLog, upsertTask } from './db-service';
+import { deleteDbTimeLog, getDbTimelogs, PAUSE, upsertDbTimeLog } from './db-service';
 import { mapEntityToTimelog, mapTimeLogToEntity } from '../mappers/TimelogMapper';
 
 /**
@@ -93,4 +93,19 @@ export async function changeTaskForEntry(logId: number, newTaskId: number): Prom
  */
 export function getTimeLogs(date = new Date(), type?: 'daily' | 'monthly'): Promise<Array<TimeLog>> {
     return getDbTimelogs(date, type).then(logs => logs.map(mapEntityToTimelog));
+}
+
+export function changeLogTime(log: TimeLog, startDate?: Date, endDate?: Date): Promise<TimeLog> {
+    if (startDate) {
+        log.start = startDate;
+    }
+
+    if (endDate) {
+        log.end = endDate;
+    }
+
+    if (startDate || endDate) {
+        return upsertDbTimeLog(mapTimeLogToEntity(log)).then(mapEntityToTimelog);
+    }
+    return Promise.resolve(log);
 }

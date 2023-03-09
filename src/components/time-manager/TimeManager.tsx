@@ -62,7 +62,7 @@ export class TimeManager extends React.Component<Prop, State> {
 
             <Button label="Save" icon="pi pi-save" onClick={this.save.bind(this)} />
 
-            <Button label="Cancel" icon="pi pi-times" onClick={evt => this.props.onCancel} />
+            <Button label="Cancel" icon="pi pi-times" onClick={_evt => this.props.onCancel()} />
         </div>;
     }
 }
